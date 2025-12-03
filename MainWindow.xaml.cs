@@ -2,7 +2,10 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Input;
+using System.Windows.Media;
 using WF = System.Windows.Forms;
 using HyIO.Views;
 
@@ -20,6 +23,11 @@ namespace HyIO
         private FolderManagerView _folderManagerView;
         private TagManagerView _tagManagerView;
         private SettingsView _settingsView;
+
+        // 네비게이션 선택 상태
+        private Button _currentNavButton;
+        private System.Windows.Media.Brush _navDefaultBackground;
+        private System.Windows.Media.Brush _navSelectedBrush;
 
         // ====== 글로벌 핫키 관련 상수/WinAPI ======
         private const int HOTKEY_ID = 0x9876;
@@ -61,9 +69,13 @@ namespace HyIO
                 _tagManagerView = new TagManagerView(_config);
                 _settingsView = new SettingsView(_config, OnSettingsChanged);
 
-                // 처음 화면: Image Overlay
+                // 네비게이션 색상 초기값
+                _navDefaultBackground = NavImageOverlay.Background;
+                _navSelectedBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x50, 0x56, 0xA5));
+
+                // 처음 화면: Image Overlay 선택
+                SelectNavButton(NavImageOverlay);
                 MainContent.Content = _imageOverlayView;
-                HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 클립보드로 복사할 수 있습니다.";
 
                 // 메인 창은 대시보드로 사용 → 보여주기
                 this.ShowInTaskbar = true;
@@ -83,6 +95,19 @@ namespace HyIO
             {
                 MessageBox.Show(ex.ToString(), "시작 중 오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
+            }
+        }
+
+        // =================== 창 드래그 (커스텀 타이틀바) ===================
+        private void HeaderBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                try
+                {
+                    DragMove();
+                }
+                catch { /* 드래그 중 예외는 무시 */ }
             }
         }
 
@@ -226,27 +251,46 @@ namespace HyIO
             this.ShowInTaskbar = false;
         }
 
-        // =================== 네비게이션 버튼 ===================
+        // =================== 네비게이션 선택 처리 ===================
+        private void SelectNavButton(Button btn)
+        {
+            if (_currentNavButton != null)
+            {
+                _currentNavButton.Background = _navDefaultBackground;
+            }
+
+            btn.Background = _navSelectedBrush;
+            _currentNavButton = btn;
+        }
+
         private void NavImageOverlay_Click(object sender, RoutedEventArgs e)
         {
+            SelectNavButton(NavImageOverlay);
+            Dashboard.Text = "이미지 선택";
             HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다.";
             MainContent.Content = _imageOverlayView;
         }
 
         private void NavFolderManager_Click(object sender, RoutedEventArgs e)
         {
+            SelectNavButton(NavFolderManager);
+            Dashboard.Text = "폴더 매니저";
             HeaderSubtitle.Text = "이미지 탐색에 사용할 폴더를 관리합니다.";
             MainContent.Content = _folderManagerView;
         }
 
         private void NavTagManager_Click(object sender, RoutedEventArgs e)
         {
+            SelectNavButton(NavTagManager);
+            Dashboard.Text = "태그 매니저";
             HeaderSubtitle.Text = "이미지에 태그를 부여하고 검색에 활용할 수 있습니다.";
             MainContent.Content = _tagManagerView;
         }
 
         private void NavSettings_Click(object sender, RoutedEventArgs e)
         {
+            SelectNavButton(NavSettings);
+            Dashboard.Text = "설정";
             HeaderSubtitle.Text = "글로벌 핫키 및 각종 옵션을 설정합니다.";
             MainContent.Content = _settingsView;
         }

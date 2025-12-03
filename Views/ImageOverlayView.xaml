@@ -8,11 +8,11 @@
         </Grid.RowDefinitions>
 
         <!-- 상단 검색 영역 -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,0,0,16">
             <TextBox x:Name="SearchBox"
                      Width="260"
                      Height="32"
-                     Padding="8,4"
+                     Padding="0,4"
                      VerticalAlignment="Center"
                      FontFamily="{StaticResource AppFontFamily}"
                      Foreground="{StaticResource AppTextPrimaryBrush}"
@@ -20,7 +20,7 @@
                      BorderBrush="{StaticResource AppBorderBrush}"
                      BorderThickness="1"
                      TextChanged="SearchBox_TextChanged"/>
-            <TextBlock Text="  Enter 또는 더블클릭으로 복사 / 붙여넣기"
+            <TextBlock Text="파일명 또는 태그 검색"
                        VerticalAlignment="Center"
                        Margin="12,0,0,0"
                        Foreground="{StaticResource AppTextSecondaryBrush}"
