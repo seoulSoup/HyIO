@@ -1,0 +1,53 @@
+﻿<Application x:Class="HyIO.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <!-- 공통 폰트 -->
+            <FontFamily x:Key="AppFontFamily">
+                pack://application:,,,/Fonts/#Pretendard
+            </FontFamily>
+
+            <!-- 색상 정의 (밝은 테마, 필요하면 값은 나중에 마음대로 바꿔도 됨) -->
+            <Color x:Key="AppBackgroundColor">#FFF5F6FA</Color>      <!-- 전체 배경 -->
+            <Color x:Key="AppSurfaceColor">#FFFFFFFF</Color>         <!-- 카드/패널 -->
+            <Color x:Key="AppSurfaceAltColor">#FFF2F3FF</Color>      <!-- 보조 카드 -->
+            <Color x:Key="AppAccentColor">#FF6366F1</Color>          <!-- 포인트 색 -->
+            <Color x:Key="AppBorderColor">#1F000000</Color>          <!-- 옅은 테두리 -->
+            <Color x:Key="AppTextPrimaryColor">#FF111827</Color>     <!-- 본문 텍스트 -->
+            <Color x:Key="AppTextSecondaryColor">#99111827</Color>   <!-- 서브 텍스트 -->
+
+            <!-- 브러시 -->
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundColor}"/>
+            <SolidColorBrush x:Key="AppSurfaceBrush" Color="{StaticResource AppSurfaceColor}"/>
+            <SolidColorBrush x:Key="AppSurfaceAltBrush" Color="{StaticResource AppSurfaceAltColor}"/>
+            <SolidColorBrush x:Key="AppAccentBrush" Color="{StaticResource AppAccentColor}"/>
+            <SolidColorBrush x:Key="AppBorderBrush" Color="{StaticResource AppBorderColor}"/>
+            <SolidColorBrush x:Key="AppTextPrimaryBrush" Color="{StaticResource AppTextPrimaryColor}"/>
+            <SolidColorBrush x:Key="AppTextSecondaryBrush" Color="{StaticResource AppTextSecondaryColor}"/>
+
+            <!-- 공통 CornerRadius -->
+            <CornerRadius x:Key="AppLargeCornerRadius">24</CornerRadius>
+
+            <!-- 메인 윈도우 바깥 Border 스타일 -->
+            <Style x:Key="RoundedWindowBorderStyle" TargetType="Border">
+                <!-- MainWindow.xaml에서 바로 쓰는 스타일 -->
+                <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}"/>
+                <Setter Property="CornerRadius" Value="{StaticResource AppLargeCornerRadius}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect ShadowDepth="0"
+                                          BlurRadius="32"
+                                          Opacity="0.25"/>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

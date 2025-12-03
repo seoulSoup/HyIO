@@ -1,0 +1,38 @@
+<UserControl x:Class="HyIO.Views.TagManagerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="이미지 파일에 태그를 부여하면 Image Overlay 화면에서 검색에 활용됩니다."
+                   Margin="0,0,0,8"
+                   TextWrapping="Wrap"
+                   Foreground="{StaticResource AppTextSecondaryBrush}"
+                   FontFamily="{StaticResource AppFontFamily}"
+                   FontSize="12"/>
+
+        <DataGrid x:Name="TagGrid"
+                  Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  HeadersVisibility="Column"
+                  FontFamily="{StaticResource AppFontFamily}"
+                  Foreground="{StaticResource AppTextPrimaryBrush}"
+                  Background="{StaticResource AppSurfaceAltBrush}"
+                  BorderBrush="{StaticResource AppBorderBrush}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="파일명"
+                                    Binding="{Binding FileName}"
+                                    Width="2*"
+                                    IsReadOnly="True"/>
+                <DataGridTextColumn Header="태그 (쉼표로 구분)"
+                                    Binding="{Binding TagsText}"
+                                    Width="3*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
