@@ -49,33 +49,5 @@ namespace HyIO.Views
                 SyncBack();
             }
         }
-
-        private void MoveUp_Click(object sender, RoutedEventArgs e)
-        {
-            if (FolderGrid.SelectedItem is FolderEntry entry)
-            {
-                int index = _folders.IndexOf(entry);
-                if (index > 0)
-                {
-                    _folders.Move(index, index - 1);
-                    FolderGrid.SelectedItem = entry;
-                    SyncBack();
-                }
-            }
-        }
-
-        private void MoveDown_Click(object sender, RoutedEventArgs e)
-        {
-            if (FolderGrid.SelectedItem is FolderEntry entry)
-            {
-                int index = _folders.IndexOf(entry);
-                if (index < _folders.Count - 1)
-                {
-                    _folders.Move(index, index + 1);
-                    FolderGrid.SelectedItem = entry;
-                    SyncBack();
-                }
-            }
-        }
     }
 }

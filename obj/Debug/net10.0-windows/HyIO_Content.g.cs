@@ -7,6 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("haru.ico")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/haru.ico")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/haru_wo_bg.png")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/image.png")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/folder.png")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/tag.png")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("resources/settings.png")]
 
 

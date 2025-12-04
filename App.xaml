@@ -7,17 +7,24 @@
 
             <!-- 공통 폰트 -->
             <FontFamily x:Key="AppFontFamily">
-                pack://application:,,,/Fonts/#Pretendard
+                <!-- pack://application:,,,/Fonts/#Pretendard -->
+                pack://application:,,,/Fonts/#ONE 모바일POP
             </FontFamily>
 
             <!-- 색상 정의 (밝은 테마, 필요하면 값은 나중에 마음대로 바꿔도 됨) -->
             <Color x:Key="AppBackgroundColor">#FFF5F6FA</Color>      <!-- 전체 배경 -->
-            <Color x:Key="AppSurfaceColor">#FFFFFFFF</Color>         <!-- 카드/패널 -->
-            <Color x:Key="AppSurfaceAltColor">#FFF2F3FF</Color>      <!-- 보조 카드 -->
+            <Color x:Key="AppSurfaceColor">#5FFB923C</Color>         <!-- 카드/패널 -->
+            <Color x:Key="AppSurfaceAltColor">#FFFFFFFF</Color>      <!-- 보조 카드 -->
             <Color x:Key="AppAccentColor">#FF6366F1</Color>          <!-- 포인트 색 -->
             <Color x:Key="AppBorderColor">#1F000000</Color>          <!-- 옅은 테두리 -->
             <Color x:Key="AppTextPrimaryColor">#FF111827</Color>     <!-- 본문 텍스트 -->
-            <Color x:Key="AppTextSecondaryColor">#99111827</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="AppTextSecondaryColor">#FF90939C</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgViolet">#E0E5E7FF</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgVioletMiddle">#FFC9D0FF</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgVioletHigh">#FFAEA4FC</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgOrange">#CFFB923C</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgOrangeMiddle">#FFFB923C</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgOrangeHigh">#FFFC770A</Color>   <!-- 서브 텍스트 -->
 
             <!-- 브러시 -->
             <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundColor}"/>
@@ -27,6 +34,12 @@
             <SolidColorBrush x:Key="AppBorderBrush" Color="{StaticResource AppBorderColor}"/>
             <SolidColorBrush x:Key="AppTextPrimaryBrush" Color="{StaticResource AppTextPrimaryColor}"/>
             <SolidColorBrush x:Key="AppTextSecondaryBrush" Color="{StaticResource AppTextSecondaryColor}"/>
+            <SolidColorBrush x:Key="ButtonVioletBrush" Color="{StaticResource ButtonBgViolet}"/>
+            <SolidColorBrush x:Key="ButtonVioletMiddleBrush" Color="{StaticResource ButtonBgVioletMiddle}"/>
+            <SolidColorBrush x:Key="ButtonVioletHighBrush" Color="{StaticResource ButtonBgVioletHigh}"/>
+            <SolidColorBrush x:Key="ButtonOrangeBrush" Color="{StaticResource ButtonBgOrange}"/>
+            <SolidColorBrush x:Key="ButtonOrangeMiddleBrush" Color="{StaticResource ButtonBgOrangeMiddle}"/>
+            <SolidColorBrush x:Key="ButtonOrangeHighBrush" Color="{StaticResource ButtonBgOrangeHigh}"/>
 
             <!-- 공통 CornerRadius -->
             <CornerRadius x:Key="AppLargeCornerRadius">24</CornerRadius>

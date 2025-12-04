@@ -71,10 +71,10 @@ namespace HyIO
 
                 // 네비게이션 색상 초기값
                 _navDefaultBackground = NavImageOverlay.Background;
-                _navSelectedBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x50, 0x56, 0xA5));
+                _navSelectedBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFB, 0x92, 0x3C));
 
                 // 처음 화면: Image Overlay 선택
-                SelectNavButton(NavImageOverlay);
+                SelectNavButton(NavImageOverlay, 180);
                 MainContent.Content = _imageOverlayView;
 
                 // 메인 창은 대시보드로 사용 → 보여주기
@@ -115,7 +115,7 @@ namespace HyIO
         private void CreateTrayIcon()
         {
             _notifyIcon = new WF.NotifyIcon();
-            _notifyIcon.Icon = new Icon("haru.ico");
+            _notifyIcon.Icon = new Icon("Resources/haru.ico");
             _notifyIcon.Visible = true;
             _notifyIcon.Text = "HyIO - ImageOverlay";
 
@@ -252,7 +252,7 @@ namespace HyIO
         }
 
         // =================== 네비게이션 선택 처리 ===================
-        private void SelectNavButton(Button btn)
+        private void SelectNavButton(Button btn, double topMaskHeight)
         {
             if (_currentNavButton != null)
             {
@@ -260,39 +260,46 @@ namespace HyIO
             }
 
             btn.Background = _navSelectedBrush;
+            RowUpper.Height = new GridLength(topMaskHeight);
             _currentNavButton = btn;
+            
         }
 
         private void NavImageOverlay_Click(object sender, RoutedEventArgs e)
         {
-            SelectNavButton(NavImageOverlay);
+            SelectNavButton(NavImageOverlay, 130);
             Dashboard.Text = "이미지 선택";
             HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다.";
             MainContent.Content = _imageOverlayView;
+            _imageOverlayView.LoadImages();
+            
         }
 
         private void NavFolderManager_Click(object sender, RoutedEventArgs e)
         {
-            SelectNavButton(NavFolderManager);
+            SelectNavButton(NavFolderManager, 180);
             Dashboard.Text = "폴더 매니저";
             HeaderSubtitle.Text = "이미지 탐색에 사용할 폴더를 관리합니다.";
             MainContent.Content = _folderManagerView;
+            
         }
 
         private void NavTagManager_Click(object sender, RoutedEventArgs e)
         {
-            SelectNavButton(NavTagManager);
+            SelectNavButton(NavTagManager, 230);
             Dashboard.Text = "태그 매니저";
-            HeaderSubtitle.Text = "이미지에 태그를 부여하고 검색에 활용할 수 있습니다.";
+            HeaderSubtitle.Text = "이미지에 태그를 부여해서 검색에 활용할 수 있습니다.";
             MainContent.Content = _tagManagerView;
+            
         }
 
         private void NavSettings_Click(object sender, RoutedEventArgs e)
         {
-            SelectNavButton(NavSettings);
+            SelectNavButton(NavSettings, 280);
             Dashboard.Text = "설정";
-            HeaderSubtitle.Text = "글로벌 핫키 및 각종 옵션을 설정합니다.";
+            HeaderSubtitle.Text = "기타 옵션을 설정합니다.";
             MainContent.Content = _settingsView;
+            
         }
 
         private void OnSettingsChanged()

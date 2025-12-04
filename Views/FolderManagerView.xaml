@@ -12,37 +12,111 @@
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   HeadersVisibility="Column"
-                  Margin="0,0,0,12"
+                  Margin="8,0,0,16"
                   FontFamily="{StaticResource AppFontFamily}"
                   Foreground="{StaticResource AppTextPrimaryBrush}"
                   Background="{StaticResource AppSurfaceAltBrush}"
-                  BorderBrush="{StaticResource AppBorderBrush}">
+                  BorderBrush="{StaticResource AppBorderBrush}"
+                  ColumnHeaderHeight="0">
+            <DataGrid.Resources>
+                <!-- TextBlock 기본 스타일 (FontSize 16으로 키움) -->
+                <Style x:Key="BigCellText" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="16"/>
+                    <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="사용"
-                                        Binding="{Binding Enabled}"
-                                        Width="60"/>
                 <DataGridTextColumn Header="폴더 경로"
+                                    FontSize="16"
                                     Binding="{Binding Path}"
                                     Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="추가"
+            <StackPanel.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="24"/>
+                    <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                </Style>
+                <Style TargetType="Button">
+                    <Setter Property="Background" Value="{StaticResource ButtonVioletHighBrush}"/>
+                </Style>
+            </StackPanel.Resources>
+
+            <Button Width="70" Height="40"
+                    Margin="0,0,12,0"
                     Click="AddFolder_Click"
-                    Margin="0,0,8,0"
-                    Padding="12,4"/>
-            <Button Content="삭제"
+                    BorderBrush="Transparent">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- 마우스 올라갔을 때 -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="{StaticResource ButtonVioletMiddleBrush}"/> <!-- 살짝 더 진한 보라빛 -->
+                            </Trigger>
+                            <!-- 눌렀을 때 -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="{StaticResource ButtonVioletBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <TextBlock Text="추가"
+                        Foreground="{StaticResource AppTextPrimaryBrush}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"/>
+            </Button>
+
+            <Button Width="70" Height="40"
+                    Margin="0,0,4,0"
                     Click="RemoveFolder_Click"
-                    Margin="0,0,8,0"
-                    Padding="12,4"/>
-            <Button Content="위로"
-                    Click="MoveUp_Click"
-                    Margin="0,0,8,0"
-                    Padding="12,4"/>
-            <Button Content="아래로"
-                    Click="MoveDown_Click"
-                    Padding="12,4"/>
+                    BorderBrush="Transparent">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- 마우스 올라갔을 때 -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#FFC9D0FF"/> <!-- 살짝 더 진한 보라빛 -->
+                            </Trigger>
+                            <!-- 눌렀을 때 -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root"
+                                        Property="Background"
+                                        Value="#E0E5E7FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <TextBlock Text="삭제"
+                        Foreground="{StaticResource AppTextPrimaryBrush}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"/>
+            </Button>
+
         </StackPanel>
     </Grid>
 </UserControl>
