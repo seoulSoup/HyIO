@@ -5,172 +5,247 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-    <!-- 메인 DataGrid -->
-    <DataGrid x:Name="TagGrid"
-                Grid.Row="0"
-                AutoGenerateColumns="False"
-                CanUserAddRows="False"
-                HeadersVisibility="Column"
-                GridLinesVisibility="None"
-                RowHeaderWidth="0"
-                SelectionMode="Single"
-                SelectionUnit="FullRow"
-                Background="#FFFAE9DE"
-                BorderThickness="0"
-                Margin="8,4,0,0">
+        <!-- 상단 안내 -->
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    Margin="8,0,0,8">
+            <TextBlock Text="이미지에 태그를 부여해서 검색에 활용할 수 있습니다."
+                       FontFamily="{StaticResource AppFontFamily}"
+                       Foreground="{StaticResource AppTextSecondaryBrush}"
+                       FontSize="14"/>
+        </StackPanel>
 
-        <DataGrid.Resources>
-            <SolidColorBrush x:Key="RowSelectedBackground" Color="#E0EAFF"/>  <!-- 연파랑 -->
-            <SolidColorBrush x:Key="RowSelectedForeground" Color="#111827"/>  <!-- 진회색 텍스트 -->
-        </DataGrid.Resources>
+        <!-- 태그 카드 그리드 + 커스텀 스크롤바 -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
 
-        <!-- ✅ Row 선택 스타일 -->
-        <DataGrid.RowStyle>
-            <Style TargetType="DataGridRow">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Foreground" Value="{StaticResource AppTextPrimaryBrush}"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Margin" Value="0,2,0,2"/>
-                <Style.Triggers>
-                    <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="{StaticResource RowSelectedBackground}"/>
-                        <Setter Property="Foreground" Value="{StaticResource RowSelectedForeground}"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-        </DataGrid.RowStyle>
+            <!-- 이 ScrollViewer 안에서만 쓰는 스타일들 -->
+            <ScrollViewer.Resources>
 
-        <!-- 1) 헤더 스타일: 폰트 16, 연보라 배경 -->
-        <DataGrid.ColumnHeaderStyle>
-            <Style TargetType="DataGridColumnHeader">
-                <Setter Property="FontSize" Value="16"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
-                <Setter Property="Foreground" Value="{StaticResource AppTextPrimaryBrush}"/>
-                <Setter Property="Background" Value="#EDE9FE"/>  <!-- 연보라 -->
-                <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                <Setter Property="Padding" Value="8,4"/>
-                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                <Setter Property="BorderBrush" Value="#FFD4CCFF"/>
-            </Style>
-        </DataGrid.ColumnHeaderStyle>
+                <!-- 먼저 Thumb 스타일 정의 (StaticResource 순서 중요!) -->
+                <Style x:Key="TagThumbStyle" TargetType="Thumb">
+                    <!-- TemplateBinding Background이 절대 UnsetValue가 되지 않도록 기본값 보장 -->
+                    <Setter Property="Background"
+                            Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
+                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Thumb">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="4"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background"
+                                    Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
 
-        <!-- 셀 폰트 기본값 -->
-        <DataGrid.CellStyle>
-            <Style TargetType="DataGridCell">
-                <Setter Property="FontSize" Value="14"/>
-                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Padding" Value="4,2"/>
-                <Setter Property="Foreground" Value="{StaticResource AppTextPrimaryBrush}"/>
-                <Style.Triggers>
-                    <!-- ✅ 선택돼도 셀 내부 글자색은 그대로 유지 -->
-                    <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Foreground" Value="{StaticResource AppTextPrimaryBrush}"/>
-                        <!-- 셀 배경은 투명으로 두고 Row 배경만 사용 -->
-                        <Setter Property="Background" Value="Transparent"/>
-                    </Trigger>
-                </Style.Triggers>
-        </Style>
-        </DataGrid.CellStyle>
+                <!-- 그 다음 ScrollBar 스타일 정의 -->
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Orientation" Value="Vertical"/>
+                    <Setter Property="Width" Value="10"/>
+                    <Setter Property="Margin" Value="2,4"/>
 
-        <DataGrid.Columns>
+                    <!-- TemplateBinding Background을 위한 기본값 -->
+                    <Setter Property="Background"
+                            Value="{StaticResource TagScrollBarTrackBackgroundBrush}"/>
 
-            <!-- 2-1) 이미지 열 -->
-            <DataGridTemplateColumn Header="이미지" Width="80">
-                <DataGridTemplateColumn.CellTemplate>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid>
+                                    <!-- 트랙 배경 -->
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="5"/>
+
+                                    <!-- 실제 스크롤 트랙 -->
+                                    <Track x:Name="PART_Track"
+                                           Orientation="{TemplateBinding Orientation}"
+                                           Minimum="{TemplateBinding Minimum}"
+                                           Maximum="{TemplateBinding Maximum}"
+                                           Value="{TemplateBinding Value}"
+                                           ViewportSize="{TemplateBinding ViewportSize}"
+                                           IsDirectionReversed="True">
+
+                                        <!-- 화살표 버튼 숨김 -->
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.LineUpCommand"
+                                                          Visibility="Collapsed"
+                                                          IsEnabled="False"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.LineDownCommand"
+                                                          Visibility="Collapsed"
+                                                          IsEnabled="False"/>
+                                        </Track.IncreaseRepeatButton>
+
+                                        <!-- Thumb -->
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource TagThumbStyle}"/>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
+            </ScrollViewer.Resources>
+
+            <!-- 실제 태그 카드 목록 -->
+            <ItemsControl x:Name="TagGrid">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel IsItemsHost="True" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Image Source="{Binding Thumbnail}"
-                                Width="64" Height="64"
-                                Stretch="UniformToFill"
-                                SnapsToDevicePixels="True"/>
+                        <Border Width="216"
+                                Margin="4"
+                                Padding="8"
+                                CornerRadius="12"
+                                Background="{StaticResource AppSurfaceAltBrush}">
+                            <StackPanel>
+                                <!-- 썸네일 -->
+                                <Image Source="{Binding Thumbnail}"
+                                       Width="200"
+                                       Height="200"
+                                       Stretch="UniformToFill"
+                                       Margin="0,0,0,8"
+                                       SnapsToDevicePixels="True"/>
+
+                                <!-- 파일 이름 -->
+                                <TextBlock Text="{Binding FileName}"
+                                           Foreground="{StaticResource AppTextPrimaryBrush}"
+                                           FontSize="12"
+                                           FontFamily="{StaticResource AppFontFamily}"
+                                           TextTrimming="CharacterEllipsis"/>
+
+                                <!-- 태그 입력 TextBox (둥근 모서리 + 세로 중앙 정렬) -->
+                                <TextBox Margin="0,6,0,4"
+                                         Height="28"
+                                         Padding="6,2"
+                                         FontFamily="{StaticResource AppFontFamily}"
+                                         FontSize="12"
+                                         Foreground="{StaticResource AppTextSecondaryBrush}"
+                                         Background="{StaticResource AppSurfaceBrush}"
+                                         BorderBrush="{StaticResource AppBorderBrush}"
+                                         BorderThickness="1"
+                                         VerticalContentAlignment="Center"
+                                         Text="{Binding NewTagText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         KeyDown="TagTextBox_KeyDown"
+                                         GotFocus="TagTextBox_GotFocus"
+                                         LostFocus="TagTextBox_LostFocus">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <!-- 여기서도 TemplateBinding Background 안 쓰고 고정 Brush 사용 -->
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="TextBox">
+                                                        <Border Background="#FFBEE6FD"
+                                                                BorderBrush="{StaticResource AppBorderBrush}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="8">
+                                                            <ScrollViewer x:Name="PART_ContentHost"
+                                                                          Margin="0"
+                                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <!-- 입력된 태그 칩들 -->
+                                <ItemsControl ItemsSource="{Binding Tags}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#EDE9FE"
+                                                    CornerRadius="12"
+                                                    Margin="0,0,4,4"
+                                                    Padding="6,2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding}"
+                                                               FontSize="11"
+                                                               Margin="0,0,4,0"
+                                                               FontFamily="{StaticResource AppFontFamily}"
+                                                               Foreground="{StaticResource AppTextPrimaryBrush}"/>
+
+                                                    <!-- X 버튼 (TemplateBinding + CornerRadius + Hover) -->
+                                                    <Button Width="14"
+                                                            Height="14"
+                                                            Padding="0"
+                                                            Cursor="Hand"
+                                                            Click="RemoveTagButton_Click"
+                                                            CommandParameter="{Binding}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <!-- TemplateBinding Background/Foreground용 기본값 -->
+                                                                <Setter Property="Background"
+                                                                        Value="{StaticResource TagChipCloseButtonBackgroundBrush}"/>
+                                                                <Setter Property="Foreground"
+                                                                        Value="{StaticResource TagChipCloseButtonForegroundBrush}"/>
+                                                                <Setter Property="BorderThickness" Value="0"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border Background="{TemplateBinding Background}"
+                                                                                    CornerRadius="7">
+                                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                                  VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter Property="Background"
+                                                                                            Value="{StaticResource TagChipCloseButtonHoverBackgroundBrush}"/>
+                                                                                    <Setter Property="Foreground"
+                                                                                            Value="{StaticResource TagChipCloseButtonHoverForegroundBrush}"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+
+                                                        <TextBlock Text="X"
+                                                                   FontSize="11"
+                                                                   VerticalAlignment="Center"
+                                                                   HorizontalAlignment="Center"
+                                                                   FontFamily="{StaticResource AppFontFamily}"/>
+                                                    </Button>
+
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                            </StackPanel>
+                        </Border>
                     </DataTemplate>
-                </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-
-            <!-- 2-2) 파일 경로 열 -->
-            <DataGridTextColumn Header="파일 이름"
-                                Width="2*"
-                                Binding="{Binding FileName}">
-                <DataGridTextColumn.ElementStyle>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="TextWrapping" Value="Wrap"/>
-                        <Setter Property="FontSize" Value="14"/>
-                        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
-                    </Style>
-                </DataGridTextColumn.ElementStyle>
-            </DataGridTextColumn>
-
-            <!-- 2-3, 3, 4) 태그 열 -->
-            <DataGridTemplateColumn Header="태그" Width="2*">
-                <DataGridTemplateColumn.CellTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-
-                            <!-- 3) 둥근 텍스트박스: 새 태그 입력 후 Enter -->
-                            <Border CornerRadius="12"
-                                    Background="{StaticResource AppSurfaceAltBrush}"
-                                    Padding="8,2"
-                                    Margin="6">
-                                <TextBox Text="{Binding NewTagText, UpdateSourceTrigger=PropertyChanged}"
-                                        BorderThickness="0"
-                                        Background="Transparent"
-                                        FontSize="14"
-                                        FontFamily="{StaticResource AppFontFamily}"
-                                        Foreground="{StaticResource AppTextSecondaryBrush}" 
-                                        KeyDown="TagTextBox_KeyDown"
-                                        GotFocus="TagInput_GotFocus"                        
-                                        LostFocus="TagInput_LostFocus"/>                    
-                            </Border>
-
-                            <!-- 이미 입력된 태그 칩들 -->
-                            <ItemsControl ItemsSource="{Binding Tags}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <!-- 태그 하나 -->
-                                        <Border Background="#EDE9FE"
-                                                CornerRadius="12"
-                                                Margin="6,0,4,4"
-                                                Padding="6,2">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding}"
-                                                            FontSize="13"
-                                                            Margin="0,0,4,0"
-                                                            FontFamily="{StaticResource AppFontFamily}"/>
-
-                                                <!-- 4) X 버튼: 태그 삭제 -->
-                                                <Button Width="16" Height="16"
-                                                        Padding="0"
-                                                        CommandParameter="{Binding}"
-                                                        Click="RemoveTagButton_Click"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Cursor="Hand">
-                                                    <TextBlock Text="✕"
-                                                                FontSize="11"
-                                                                VerticalAlignment="Center"
-                                                                HorizontalAlignment="Center"
-                                                                Foreground="{StaticResource AppTextSecondaryBrush}"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                        </StackPanel>
-                    </DataTemplate>
-                </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-
-        </DataGrid.Columns>
-    </DataGrid>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

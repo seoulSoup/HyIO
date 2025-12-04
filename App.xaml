@@ -40,7 +40,20 @@
             <SolidColorBrush x:Key="ButtonOrangeBrush" Color="{StaticResource ButtonBgOrange}"/>
             <SolidColorBrush x:Key="ButtonOrangeMiddleBrush" Color="{StaticResource ButtonBgOrangeMiddle}"/>
             <SolidColorBrush x:Key="ButtonOrangeHighBrush" Color="{StaticResource ButtonBgOrangeHigh}"/>
+            <!-- Tag Manager 전용 ScrollBar 브러시 -->
+            <SolidColorBrush x:Key="TagScrollBarTrackBackgroundBrush" Color="#20FFFFFF"/>
+            <SolidColorBrush x:Key="TagScrollBarThumbBackgroundBrush" Color="#FFFFFFFF"/>
+            <SolidColorBrush x:Key="TagScrollBarThumbHoverBackgroundBrush" Color="#FFE0E0E0"/>
 
+            <!-- Tag 칩 X 버튼용 브러시 -->
+            <SolidColorBrush x:Key="TagChipCloseButtonBackgroundBrush"
+                            Color="#EDE9FE"/>
+            <SolidColorBrush x:Key="TagChipCloseButtonForegroundBrush"
+                            Color="#7A7A7A"/>
+            <SolidColorBrush x:Key="TagChipCloseButtonHoverBackgroundBrush"
+                            Color="#FFFB7A7A"/>
+            <SolidColorBrush x:Key="TagChipCloseButtonHoverForegroundBrush"
+                            Color="#FFFFFFFF"/>
             <!-- 공통 CornerRadius -->
             <CornerRadius x:Key="AppLargeCornerRadius">24</CornerRadius>
 

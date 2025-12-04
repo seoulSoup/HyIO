@@ -74,7 +74,7 @@ namespace HyIO
                 _navSelectedBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFB, 0x92, 0x3C));
 
                 // 처음 화면: Image Overlay 선택
-                SelectNavButton(NavImageOverlay, 180);
+                SelectNavButton(NavImageOverlay, 130);
                 MainContent.Content = _imageOverlayView;
 
                 // 메인 창은 대시보드로 사용 → 보여주기
@@ -284,13 +284,16 @@ namespace HyIO
             
         }
 
+
         private void NavTagManager_Click(object sender, RoutedEventArgs e)
         {
             SelectNavButton(NavTagManager, 230);
             Dashboard.Text = "태그 매니저";
             HeaderSubtitle.Text = "이미지에 태그를 부여해서 검색에 활용할 수 있습니다.";
+            // 폴더/파일 구성이 바뀌었을 수 있으므로, 탭을 열 때마다 태그 목록 새로고침
+            _tagManagerView.ReloadTags();
+
             MainContent.Content = _tagManagerView;
-            
         }
 
         private void NavSettings_Click(object sender, RoutedEventArgs e)
