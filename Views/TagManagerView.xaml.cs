@@ -17,6 +17,7 @@ namespace HyIO.Views
     {
         // placeholder 텍스트
         private const string TagPlaceholderText = "여기에 태그 를 입력한 뒤 Enter";
+        public double ScrollLogicalValue { get; private set; }
 
         // 각 카드(이미지 하나)에 대응하는 ViewModel
         public class TagRow : INotifyPropertyChanged
@@ -331,6 +332,33 @@ namespace HyIO.Views
                         tb.Foreground = Brushes.Gray;
                 }
             }
+        }
+        private void TagScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (sender is not ScrollViewer sv)
+                return;
+
+            // ScrollableHeight가 0이면(스크롤 불가능) 0으로 처리
+            double scrollable = sv.ScrollableHeight;
+            double offset = sv.VerticalOffset;
+
+            double t = scrollable <= 0 ? 0.0 : offset / scrollable;
+
+            double logicalValue = 100 + t * (600 - 100);
+           if (!_scrollDebugShown)
+            {
+                _scrollDebugShown = true;
+                MessageBox.Show($"scrollable={scrollable}, offset={offset}");
+            }
+            // ✅ 이 줄이 있어도 이제 정상
+            ScrollLogicalValue = logicalValue;
+
+            // TODO: logicalValue를 네가 원하는 곳에 사용
+            // 예: 디버그 출력
+            // System.Diagnostics.Debug.WriteLine($"Logical scroll = {logicalValue:F2}");
+
+            // 만약 ViewModel에 프로퍼티가 있다면 거기에 넣어줘도 좋고,
+            // UI의 다른 요소(라벨, 슬라이더 등)를 업데이트해도 됨.
         }
     }
 }

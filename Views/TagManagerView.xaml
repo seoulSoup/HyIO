@@ -24,7 +24,8 @@
         <!-- 태그 카드 그리드 + 커스텀 스크롤바 -->
         <ScrollViewer Grid.Row="1"
                       VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
+                      HorizontalScrollBarVisibility="Disabled"
+                      ScrollChanged="TagScrollViewer_ScrollChanged">
 
             <!-- 이 ScrollViewer 안에서만 쓰는 스타일들 -->
             <ScrollViewer.Resources>
