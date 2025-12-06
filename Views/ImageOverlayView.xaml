@@ -30,7 +30,87 @@
 
         <!-- 이미지 썸네일 리스트 -->
         <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto">
+              VerticalScrollBarVisibility="Auto"
+              HorizontalScrollBarVisibility="Disabled">
+
+            <!-- ScrollViewer 내부에서만 쓰이는 ScrollBar/Thumb 스타일 -->
+            <ScrollViewer.Resources>
+
+                <!-- 🟣 둥근 Thumb 스타일 (TagManager와 동일) -->
+                <Style x:Key="OverlayThumbStyle" TargetType="Thumb">
+                    <Setter Property="MinHeight" Value="40"/>
+                    <Setter Property="Margin" Value="0,4"/>
+                    <Setter Property="Background"
+                            Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
+                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Thumb">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="4"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background"
+                                    Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+
+                <!-- 🟧 스크롤바 전체 스타일 -->
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Orientation" Value="Vertical"/>
+                    <Setter Property="Width" Value="10"/>
+                    <Setter Property="Margin" Value="2,4"/>
+
+                    <!-- ScrollBar.Track 배경 -->
+                    <Setter Property="Background"
+                            Value="{StaticResource TagScrollBarTrackBackgroundBrush}"/>
+
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid>
+                                    <!-- 트랙 바깥 배경 -->
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="5"/>
+
+                                    <!-- 실제 트랙 -->
+                                    <Track x:Name="PART_Track"
+                                        Orientation="{TemplateBinding Orientation}"
+                                        Minimum="{TemplateBinding Minimum}"
+                                        Maximum="{TemplateBinding Maximum}"
+                                        Value="{TemplateBinding Value}"
+                                        ViewportSize="{TemplateBinding ViewportSize}"
+                                        IsDirectionReversed="True">
+
+                                        <!-- 위/아래 버튼 제거 -->
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Visibility="Collapsed" IsEnabled="False"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Visibility="Collapsed" IsEnabled="False"/>
+                                        </Track.IncreaseRepeatButton>
+
+                                        <!-- 둥근 Thumb -->
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource OverlayThumbStyle}"/>
+                                        </Track.Thumb>
+
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
+            </ScrollViewer.Resources>
+
+            <!-- 기존 ItemsControl 전체 그대로 유지 -->
             <ItemsControl x:Name="ImageItemsControl">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -52,21 +132,21 @@
                                     Background="{StaticResource AppSurfaceAltBrush}">
                                 <StackPanel>
                                     <Image Source="{Binding Thumbnail}"
-                                           Width="144" Height="144"
-                                           Stretch="UniformToFill"
-                                           Margin="0,0,0,8"
-                                           SnapsToDevicePixels="True"/>
+                                        Width="144" Height="144"
+                                        Stretch="UniformToFill"
+                                        Margin="0,0,0,8"
+                                        SnapsToDevicePixels="True"/>
                                     <TextBlock Text="{Binding FileName}"
-                                               Foreground="{StaticResource AppTextPrimaryBrush}"
-                                               FontSize="12"
-                                               FontFamily="{StaticResource AppFontFamily}"
-                                               TextTrimming="CharacterEllipsis"/>
+                                            Foreground="{StaticResource AppTextPrimaryBrush}"
+                                            FontSize="12"
+                                            FontFamily="{StaticResource AppFontFamily}"
+                                            TextTrimming="CharacterEllipsis"/>
                                     <TextBlock Text="{Binding TagsText}"
-                                               Foreground="{StaticResource AppTextSecondaryBrush}"
-                                               FontSize="11"
-                                               Margin="0,2,0,0"
-                                               FontFamily="{StaticResource AppFontFamily}"
-                                               TextTrimming="CharacterEllipsis"/>
+                                            Foreground="{StaticResource AppTextSecondaryBrush}"
+                                            FontSize="11"
+                                            Margin="0,2,0,0"
+                                            FontFamily="{StaticResource AppFontFamily}"
+                                            TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </Border>
                         </Button>
@@ -74,5 +154,6 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
     </Grid>
 </UserControl>

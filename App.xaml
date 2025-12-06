@@ -41,9 +41,9 @@
             <SolidColorBrush x:Key="ButtonOrangeMiddleBrush" Color="{StaticResource ButtonBgOrangeMiddle}"/>
             <SolidColorBrush x:Key="ButtonOrangeHighBrush" Color="{StaticResource ButtonBgOrangeHigh}"/>
             <!-- Tag Manager 전용 ScrollBar 브러시 -->
-            <SolidColorBrush x:Key="TagScrollBarTrackBackgroundBrush" Color="#20FFFFFF"/>
-            <SolidColorBrush x:Key="TagScrollBarThumbBackgroundBrush" Color="#FFFFFFFF"/>
-            <SolidColorBrush x:Key="TagScrollBarThumbHoverBackgroundBrush" Color="#FFE0E0E0"/>
+            <SolidColorBrush x:Key="TagScrollBarTrackBackgroundBrush" Color="{StaticResource ButtonBgViolet}"/>
+            <SolidColorBrush x:Key="TagScrollBarThumbBackgroundBrush" Color="{StaticResource ButtonBgVioletMiddle}"/>
+            <SolidColorBrush x:Key="TagScrollBarThumbHoverBackgroundBrush" Color="{StaticResource ButtonBgVioletHigh}"/>
 
             <!-- Tag 칩 X 버튼용 브러시 -->
             <SolidColorBrush x:Key="TagChipCloseButtonBackgroundBrush"

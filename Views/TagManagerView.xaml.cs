@@ -18,7 +18,9 @@ namespace HyIO.Views
         // placeholder 텍스트
         private const string TagPlaceholderText = "여기에 태그 를 입력한 뒤 Enter";
         public double ScrollLogicalValue { get; private set; }
-
+        private bool _isThumbDragging;
+        private Point _thumbDragStartPoint;     // 트랙 기준 시작 위치
+        private double _thumbDragStartOffset;   // 드래그 시작 시 ScrollViewer Offset
         // 각 카드(이미지 하나)에 대응하는 ViewModel
         public class TagRow : INotifyPropertyChanged
         {
@@ -26,6 +28,7 @@ namespace HyIO.Views
             private string _filePath;
             private ImageSource _thumbnail;
             private string _newTagText;
+            
 
             public string FileName
             {
@@ -219,7 +222,7 @@ namespace HyIO.Views
             if (!text.StartsWith("#"))
                 text = "#" + text;
 
-            // ✅ 글자 수 12자로 제한 (# 포함)
+            // ✅ 글자 수 20자로 제한 (# 포함)
             if (text.Length > 20)
                 text = text.Substring(0, 20);
 
@@ -345,11 +348,7 @@ namespace HyIO.Views
             double t = scrollable <= 0 ? 0.0 : offset / scrollable;
 
             double logicalValue = 100 + t * (600 - 100);
-           if (!_scrollDebugShown)
-            {
-                _scrollDebugShown = true;
-                MessageBox.Show($"scrollable={scrollable}, offset={offset}");
-            }
+           
             // ✅ 이 줄이 있어도 이제 정상
             ScrollLogicalValue = logicalValue;
 
@@ -359,6 +358,112 @@ namespace HyIO.Views
 
             // 만약 ViewModel에 프로퍼티가 있다면 거기에 넣어줘도 좋고,
             // UI의 다른 요소(라벨, 슬라이더 등)를 업데이트해도 됨.
+            UpdateCustomScrollbar();
         }
+
+        private void CustomScrollTrack_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateCustomScrollbar();
+        }
+        private void UpdateCustomScrollbar()
+        {
+            if (CustomScrollTrack == null || CustomScrollThumb == null || TagScrollViewer == null)
+                return;
+
+            double trackHeight = CustomScrollTrack.ActualHeight;
+
+            if (trackHeight <= 0)
+                return;
+
+            double extent = TagScrollViewer.ExtentHeight;
+            double viewport = TagScrollViewer.ViewportHeight;
+            double scrollable = TagScrollViewer.ScrollableHeight;
+
+            // 스크롤바가 필요 없는 경우: Thumb를 트랙 전체로
+            if (extent <= 0 || scrollable <= 0)
+            {
+                double fullHeight = Math.Max(0, trackHeight - 8); // 위/아래 Margin=2
+                CustomScrollThumb.Height = fullHeight;
+                CustomScrollThumb.Margin = new Thickness(4);
+                return;
+            }
+
+            // Thumb 높이: viewport 비율만큼, 최소 32 유지
+            double innerTrackHeight = trackHeight - 8; // 위/아래 2px 여백
+            double thumbHeight = Math.Max(32, innerTrackHeight * (viewport / extent));
+            if (thumbHeight > innerTrackHeight)
+                thumbHeight = innerTrackHeight;
+
+            CustomScrollThumb.Height = thumbHeight;
+
+            // Thumb 이동 가능 거리
+            double travel = innerTrackHeight - thumbHeight;
+            if (travel < 0) travel = 0;
+
+            double t = scrollable <= 0 ? 0.0 : TagScrollViewer.VerticalOffset / scrollable;
+
+            // topMargin: 2px(위 여백) + t * travel
+            double topMargin = 4 + travel * t;
+
+            // CustomScrollThumb.Margin = new Thickness(2, topMargin, 2, 2);
+            CustomScrollThumb.Margin = new Thickness(4, topMargin, 4, 4);
+        }
+        private void CustomScrollThumb_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (TagScrollViewer == null || CustomScrollTrack == null)
+                return;
+
+            _isThumbDragging = true;
+            _thumbDragStartPoint = e.GetPosition(CustomScrollTrack);
+            _thumbDragStartOffset = TagScrollViewer.VerticalOffset;
+
+            CustomScrollThumb.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void CustomScrollThumb_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isThumbDragging)
+                return;
+
+            _isThumbDragging = false;
+            CustomScrollThumb.ReleaseMouseCapture();
+            e.Handled = true;
+        }
+
+        private void CustomScrollThumb_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_isThumbDragging)
+                return;
+
+            if (TagScrollViewer == null || CustomScrollTrack == null)
+                return;
+
+            double scrollable = TagScrollViewer.ScrollableHeight;
+            if (scrollable <= 0)
+                return;
+
+            double trackHeight = CustomScrollTrack.ActualHeight;
+            double innerTrackHeight = trackHeight - 4; // 위/아래 여백 2씩
+            double thumbHeight = CustomScrollThumb.ActualHeight;
+            double travel = innerTrackHeight - thumbHeight;
+            if (travel <= 0)
+                return;
+
+            // 현재 마우스 위치 (트랙 기준)
+            double currentY = e.GetPosition(CustomScrollTrack).Y;
+            double deltaY = currentY - _thumbDragStartPoint.Y;
+
+            // 마우스 이동 비율 → 스크롤 Offset 변화
+            double proportion = deltaY / travel;
+            double newOffset = _thumbDragStartOffset + proportion * scrollable;
+
+            // 범위 클램프
+            if (newOffset < 0) newOffset = 0;
+            if (newOffset > scrollable) newOffset = scrollable;
+
+            TagScrollViewer.ScrollToVerticalOffset(newOffset);
+        }
+
     }
 }

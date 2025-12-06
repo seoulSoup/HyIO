@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ragna\\OneDrive\\문서\\Projects\\Project23_ImageOverlay\\HyIO\\HyIO.csproj",
+      "projectUniqueName": "C:\\Users\\ragna\\Documents\\Project\\Project03_ImageOverlay\\HyIO\\HyIO.csproj",
       "projectName": "HyIO",
-      "projectPath": "C:\\Users\\ragna\\OneDrive\\문서\\Projects\\Project23_ImageOverlay\\HyIO\\HyIO.csproj",
+      "projectPath": "C:\\Users\\ragna\\Documents\\Project\\Project03_ImageOverlay\\HyIO\\HyIO.csproj",
       "packagesPath": "C:\\Users\\ragna\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ragna\\OneDrive\\문서\\Projects\\Project23_ImageOverlay\\HyIO\\obj\\",
+      "outputPath": "C:\\Users\\ragna\\Documents\\Project\\Project03_ImageOverlay\\HyIO\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\ragna\\AppData\\Roaming\\NuGet\\NuGet.Config"
