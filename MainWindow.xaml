@@ -176,20 +176,18 @@
                         </StackPanel>
 
                         <!-- 네비 버튼들 -->
-                        <StackPanel Grid.Row="1"
-                                    Margin="0,0,0,0"
-                                    VerticalAlignment="Stretch">
-                            
-
-                            <StackPanel.Resources>
+                        <Grid Grid.Row="1"
+                              x:Name="NavButtonHost"
+                              Margin="0,0,0,0"
+                              VerticalAlignment="Stretch">
+                            <Grid.Resources>
                                 <Style x:Key="NavButtonStyle" TargetType="Button">
                                     <Setter Property="HorizontalContentAlignment" Value="Left"/>
                                     <Setter Property="Padding" Value="0,0,0,0"/>
                                     <Setter Property="Height" Value="50"/>
-                                    <!-- <Setter Property="Margin" Value="0,4,0,4"/> -->
                                     <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
                                     <Setter Property="Foreground" Value="#FFF0F0F0"/>
-                                    <Setter Property="Background" Value="#FF26295A"/>
+                                    <Setter Property="Background" Value="Transparent"/>
                                     <Setter Property="BorderBrush" Value="Transparent"/>
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="Cursor" Value="Hand"/>
@@ -197,104 +195,116 @@
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="Root"
-                                                        Background="{TemplateBinding Background}">
-                                                        <!-- CornerRadius="16"> -->
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="0">
                                                     <ContentPresenter Margin="4,0,0,0"
                                                                       VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
-                                                    <!-- <Trigger Property="IsMouseOver" Value="True"> -->
-                                                        <!-- <Setter TargetName="Root" Property="Background" Value="#FFFFAF68"/> -->
-                                                    <!-- </Trigger> -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Root" Property="Background" Value="#1FFFFFFF"/>
+                                                    </Trigger>
                                                     <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="Root" Property="Background" Value="#FFFB923C"/>
+                                                        <Setter TargetName="Root" Property="Background" Value="#35FB923C"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Setter.Value>
                                     </Setter>
                                 </Style>
-                            </StackPanel.Resources>
+                            </Grid.Resources>
 
-                            <TextBlock Text="Navigation"
-                                       Margin="24,12,0,12"
-                                       Foreground="#90FFFFFF"
-                                       FontSize="12"
-                                       FontFamily="{StaticResource AppFontFamily}"/>
+                            <Border x:Name="NavSelectionHighlight"
+                                    Height="50"
+                                    Margin="0,44,0,0"
+                                    VerticalAlignment="Top"
+                                    Background="{StaticResource ButtonOrangeMiddleBrush}"
+                                    CornerRadius="0"
+                                    IsHitTestVisible="False"
+                                    Panel.ZIndex="0"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="NavSelectionTransform"/>
+                                </Border.RenderTransform>
+                            </Border>
 
-                            <Button x:Name="NavImageOverlay"
-                                    Style="{StaticResource NavButtonStyle}"
-                                    Click="NavImageOverlay_Click"
-                                    Margin="0,0,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <!-- <TextBlock Text="📷" FontSize="16" Margin="0,0,8,0"/> -->
-                                    <Image Source="Resources/Image.png"
-                                           Width="30" Height="30"
-                                           Stretch="UniformToFill"
-                                           Margin="24,6,12,8"
-                                           SnapsToDevicePixels="True"/>
-                                    <TextBlock Text="이미지 목록"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                            <StackPanel Panel.ZIndex="1">
+                                <TextBlock Text="Navigation"
+                                           Margin="24,12,0,12"
+                                           Foreground="#90FFFFFF"
+                                           FontSize="12"
+                                           FontFamily="{StaticResource AppFontFamily}"/>
 
-                            <Button x:Name="NavFolderManager"
-                                    Style="{StaticResource NavButtonStyle}"
-                                    Click="NavFolderManager_Click"
-                                    Margin="0,0,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <!-- <TextBlock Text="📁" FontSize="16" Margin="0,0,8,0"/> -->
-                                    <Image Source="Resources/Folder.png"
-                                           Width="30" Height="30"
-                                           Stretch="UniformToFill"
-                                           Margin="24,6,12,8"
-                                           SnapsToDevicePixels="True"/>
-                                    <TextBlock Text="폴더 매니저"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                                <Button x:Name="NavImageOverlay"
+                                        Style="{StaticResource NavButtonStyle}"
+                                        Click="NavImageOverlay_Click"
+                                        Margin="0,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="Resources/Image.png"
+                                               Width="30" Height="30"
+                                               Stretch="UniformToFill"
+                                               Margin="24,6,12,8"
+                                               SnapsToDevicePixels="True"/>
+                                        <TextBlock Text="이미지 목록"
+                                                   FontSize="16"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
 
-                            <Button x:Name="NavTagManager"
-                                    Style="{StaticResource NavButtonStyle}"
-                                    Click="NavTagManager_Click"
-                                    Margin="0,0,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <!-- <TextBlock Text="🏷️" FontSize="16" Margin="0,0,8,0"/> -->
-                                    <Image Source="Resources/Tag.png"
-                                           Width="30" Height="30"
-                                           Stretch="UniformToFill"
-                                           Margin="24,6,12,8"
-                                           SnapsToDevicePixels="True"/>
-                                    <TextBlock Text="태그 매니저"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                                <Button x:Name="NavFolderManager"
+                                        Style="{StaticResource NavButtonStyle}"
+                                        Click="NavFolderManager_Click"
+                                        Margin="0,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="Resources/Folder.png"
+                                               Width="30" Height="30"
+                                               Stretch="UniformToFill"
+                                               Margin="24,6,12,8"
+                                               SnapsToDevicePixels="True"/>
+                                        <TextBlock Text="폴더 매니저"
+                                                   FontSize="16"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
 
-                            <Button x:Name="NavSettings"
-                                    Style="{StaticResource NavButtonStyle}"
-                                    Click="NavSettings_Click"
-                                    Margin="0,0,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <Image Source="Resources/Settings.png"
-                                           Width="30" Height="30"
-                                           Stretch="UniformToFill"
-                                           Margin="24,6,12,8"
-                                           SnapsToDevicePixels="True"/>
-                                    <!-- <TextBlock Text="⚙️" FontSize="16" Margin="0,0,8,0"/> -->
-                                    <TextBlock Text="설정"
-                                               FontSize="16"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
+                                <Button x:Name="NavTagManager"
+                                        Style="{StaticResource NavButtonStyle}"
+                                        Click="NavTagManager_Click"
+                                        Margin="0,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="Resources/Tag.png"
+                                               Width="30" Height="30"
+                                               Stretch="UniformToFill"
+                                               Margin="24,6,12,8"
+                                               SnapsToDevicePixels="True"/>
+                                        <TextBlock Text="태그 매니저"
+                                                   FontSize="16"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button x:Name="NavSettings"
+                                        Style="{StaticResource NavButtonStyle}"
+                                        Click="NavSettings_Click"
+                                        Margin="0,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="Resources/Settings.png"
+                                               Width="30" Height="30"
+                                               Stretch="UniformToFill"
+                                               Margin="24,6,12,8"
+                                               SnapsToDevicePixels="True"/>
+                                        <TextBlock Text="설정"
+                                                   FontSize="16"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
 
                         <!-- 하단 버전 정보 -->
                         <StackPanel Grid.Row="2"
                                     Margin="24,32,24,20">
-                            <TextBlock Text="HyIO · ImageOverlay"
+                            <TextBlock Text="HyIO · Hynix Image Overlay"
                                        Foreground="#80FFFFFF"
                                        FontSize="11"
                                        FontFamily="{StaticResource AppFontFamily}"/>

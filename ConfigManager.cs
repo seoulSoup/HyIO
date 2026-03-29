@@ -24,6 +24,9 @@ namespace HyIO
                 string json = File.ReadAllText(ConfigPath);
                 var cfg = JsonSerializer.Deserialize<AppConfig>(json);
                 if (cfg == null) cfg = new AppConfig();
+                cfg.Folders ??= new();
+                cfg.Tags ??= new();
+                cfg.ImageUsage ??= new();
                 return cfg;
             }
             catch

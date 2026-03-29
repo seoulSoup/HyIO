@@ -14,7 +14,14 @@ namespace HyIO
         public string Hotkey { get; set; } = "Ctrl+Space";
         public List<FolderEntry> Folders { get; set; } = new();
         public Dictionary<string, List<string>> Tags { get; set; } = new();
+        public Dictionary<string, ImageUsageEntry> ImageUsage { get; set; } = new();
         public string IconPath { get; set; } = "";
         public bool AutoPasteEnabled { get; set; } = false;
+    }
+
+    public class ImageUsageEntry
+    {
+        public string FolderPath { get; set; } = "";
+        public int Count { get; set; }
     }
 }

@@ -26,6 +26,7 @@ namespace HyIO.Views
         {
             private string _fileName;
             private string _filePath;
+            private string _tagKey = "";
             private ImageSource _thumbnail;
             private string _newTagText;
             
@@ -41,6 +42,12 @@ namespace HyIO.Views
             {
                 get => _filePath;
                 set { _filePath = value; OnPropertyChanged(); }
+            }
+
+            public string TagKey
+            {
+                get => _tagKey;
+                set { _tagKey = value; OnPropertyChanged(); }
             }
 
             // 썸네일 이미지
@@ -59,6 +66,7 @@ namespace HyIO.Views
 
             // 이미지에 붙은 태그들
             public ObservableCollection<string> Tags { get; } = new();
+            public bool CanRemoveLegacyFileNameKey { get; set; }
 
             public event PropertyChangedEventHandler PropertyChanged;
 
@@ -67,12 +75,14 @@ namespace HyIO.Views
         }
 
         private readonly AppConfig _config;
+        private readonly Action _onTagsChanged;
         private readonly ObservableCollection<TagRow> _rows = new();
 
-        public TagManagerView(AppConfig config)
+        public TagManagerView(AppConfig config, Action onTagsChanged = null)
         {
             InitializeComponent();
             _config = config;
+            _onTagsChanged = onTagsChanged;
 
             TagGrid.ItemsSource = _rows;
             LoadTags();
@@ -83,10 +93,17 @@ namespace HyIO.Views
             LoadTags();
         }
 
+        private int GetUsageCount(string filePath)
+        {
+            var imageKey = TagKeyHelper.GetImageKey(filePath);
+            return _config.ImageUsage.TryGetValue(imageKey, out var usage) ? usage.Count : 0;
+        }
+
         // ==================== 태그 로딩 ====================
         private void LoadTags()
         {
             _rows.Clear();
+            bool configChanged = false;
 
             // 사용 가능한 폴더
             var enabledFolders = _config.Folders
@@ -122,43 +139,74 @@ namespace HyIO.Views
                 .Select(path => new
                 {
                     FileName = Path.GetFileName(path),
-                    FullPath = path
+                    FullPath = path,
+                    TagKey = TagKeyHelper.GetImageKey(path),
+                    UsageCount = GetUsageCount(path)
                 })
-                .GroupBy(x => x.FileName, StringComparer.OrdinalIgnoreCase)
-                .Select(g => g.First())
-                .OrderBy(x => x.FileName)
+                .OrderByDescending(x => x.UsageCount)
+                .ThenBy(x => x.FileName)
+                .ThenBy(x => x.FullPath, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             // === 1) 현재 존재하는 파일 기준으로 _config.Tags 정리 ===
+            var fileCountsByName = allFiles
+                .GroupBy(f => f.FileName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+
+            var activeImageKeys = new HashSet<string>(
+                allFiles.Select(f => f.TagKey),
+                StringComparer.OrdinalIgnoreCase);
+
             var activeFileNames = new HashSet<string>(
                 allFiles.Select(f => f.FileName),
                 StringComparer.OrdinalIgnoreCase);
 
             var keysToRemove = _config.Tags.Keys
-                .Where(k => !activeFileNames.Contains(k))
+                .Where(k =>
+                {
+                    if (TagKeyHelper.IsPathBasedKey(k))
+                        return !activeImageKeys.Contains(TagKeyHelper.GetImageKey(k));
+
+                    return !activeFileNames.Contains(k);
+                })
                 .ToList();
 
             foreach (var key in keysToRemove)
             {
                 _config.Tags.Remove(key);
-            }
-
-            if (keysToRemove.Count > 0)
-            {
-                ConfigManager.Save(_config);
+                configChanged = true;
             }
 
             // === 2) 실제 존재하는 이미지들만 카드로 표시 ===
             foreach (var file in allFiles)
             {
-                _config.Tags.TryGetValue(file.FileName, out var tagList);
+                List<string> tagList = null;
+
+                if (_config.Tags.TryGetValue(file.TagKey, out var pathTagList))
+                {
+                    tagList = pathTagList;
+                }
+                else if (_config.Tags.TryGetValue(file.FileName, out var legacyTagList))
+                {
+                    tagList = legacyTagList;
+
+                    if (fileCountsByName[file.FileName] == 1)
+                    {
+                        _config.Tags[file.TagKey] = new List<string>(legacyTagList);
+                        _config.Tags.Remove(file.FileName);
+                        tagList = _config.Tags[file.TagKey];
+                        configChanged = true;
+                    }
+                }
 
                 var row = new TagRow
                 {
                     FileName = file.FileName,
                     FilePath = file.FullPath,
+                    TagKey = file.TagKey,
                     Thumbnail = LoadThumbnailSafe(file.FullPath),
-                    NewTagText = TagPlaceholderText
+                    NewTagText = TagPlaceholderText,
+                    CanRemoveLegacyFileNameKey = fileCountsByName[file.FileName] == 1
                 };
 
                 if (tagList != null)
@@ -175,6 +223,11 @@ namespace HyIO.Views
                 }
 
                 _rows.Add(row);
+            }
+
+            if (configChanged)
+            {
+                ConfigManager.Save(_config);
             }
         }
 
@@ -290,14 +343,20 @@ namespace HyIO.Views
 
             if (tags.Count == 0)
             {
-                _config.Tags.Remove(row.FileName);
+                _config.Tags.Remove(row.TagKey);
             }
             else
             {
-                _config.Tags[row.FileName] = tags;
+                _config.Tags[row.TagKey] = tags;
+            }
+
+            if (row.CanRemoveLegacyFileNameKey)
+            {
+                _config.Tags.Remove(row.FileName);
             }
 
             ConfigManager.Save(_config);
+            _onTagsChanged?.Invoke();
         }
 
         // ==================== placeholder 처리 ====================

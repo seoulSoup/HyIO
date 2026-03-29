@@ -1,4 +1,4 @@
-<UserControl x:Class="HyIO.Views.ImageOverlayView"
+﻿<UserControl x:Class="HyIO.Views.ImageOverlayView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
@@ -7,7 +7,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 상단 검색 영역 -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,0,0,16">
             <TextBox x:Name="SearchBox"
                      Width="260"
@@ -28,132 +27,119 @@
                        FontSize="14"/>
         </StackPanel>
 
-        <!-- 이미지 썸네일 리스트 -->
-        <ScrollViewer Grid.Row="1"
-              VerticalScrollBarVisibility="Auto"
-              HorizontalScrollBarVisibility="Disabled">
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="20" />
+            </Grid.ColumnDefinitions>
 
-            <!-- ScrollViewer 내부에서만 쓰이는 ScrollBar/Thumb 스타일 -->
-            <ScrollViewer.Resources>
+            <ScrollViewer x:Name="ImageScrollViewer"
+                          Grid.Column="0"
+                          VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Disabled"
+                          ScrollChanged="ImageScrollViewer_ScrollChanged">
+                <ItemsControl x:Name="ImageItemsControl">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                <!-- 🟣 둥근 Thumb 스타일 (TagManager와 동일) -->
-                <Style x:Key="OverlayThumbStyle" TargetType="Thumb">
-                    <Setter Property="MinHeight" Value="40"/>
-                    <Setter Property="Margin" Value="0,4"/>
-                    <Setter Property="Background"
-                            Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
-                    <Setter Property="SnapsToDevicePixels" Value="True"/>
-
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="Thumb">
-                                <Border Background="{TemplateBinding Background}"
-                                        CornerRadius="4"/>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background"
-                                    Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-
-                <!-- 🟧 스크롤바 전체 스타일 -->
-                <Style TargetType="ScrollBar">
-                    <Setter Property="Orientation" Value="Vertical"/>
-                    <Setter Property="Width" Value="10"/>
-                    <Setter Property="Margin" Value="2,4"/>
-
-                    <!-- ScrollBar.Track 배경 -->
-                    <Setter Property="Background"
-                            Value="{StaticResource TagScrollBarTrackBackgroundBrush}"/>
-
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ScrollBar">
-                                <Grid>
-                                    <!-- 트랙 바깥 배경 -->
-                                    <Border Background="{TemplateBinding Background}"
-                                            CornerRadius="5"/>
-
-                                    <!-- 실제 트랙 -->
-                                    <Track x:Name="PART_Track"
-                                        Orientation="{TemplateBinding Orientation}"
-                                        Minimum="{TemplateBinding Minimum}"
-                                        Maximum="{TemplateBinding Maximum}"
-                                        Value="{TemplateBinding Value}"
-                                        ViewportSize="{TemplateBinding ViewportSize}"
-                                        IsDirectionReversed="True">
-
-                                        <!-- 위/아래 버튼 제거 -->
-                                        <Track.DecreaseRepeatButton>
-                                            <RepeatButton Visibility="Collapsed" IsEnabled="False"/>
-                                        </Track.DecreaseRepeatButton>
-                                        <Track.IncreaseRepeatButton>
-                                            <RepeatButton Visibility="Collapsed" IsEnabled="False"/>
-                                        </Track.IncreaseRepeatButton>
-
-                                        <!-- 둥근 Thumb -->
-                                        <Track.Thumb>
-                                            <Thumb Style="{StaticResource OverlayThumbStyle}"/>
-                                        </Track.Thumb>
-
-                                    </Track>
-                                </Grid>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-
-            </ScrollViewer.Resources>
-
-            <!-- 기존 ItemsControl 전체 그대로 유지 -->
-            <ItemsControl x:Name="ImageItemsControl">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel IsItemsHost="True" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Click="ImageButton_Click"
-                                Margin="4"
-                                Padding="0"
-                                BorderThickness="0"
-                                Background="Transparent">
-                            <Border Width="160"
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Click="ImageButton_Click"
                                     Margin="4"
-                                    Padding="8"
-                                    CornerRadius="12"
-                                    Background="{StaticResource AppSurfaceAltBrush}">
-                                <StackPanel>
-                                    <Image Source="{Binding Thumbnail}"
-                                        Width="144" Height="144"
-                                        Stretch="UniformToFill"
-                                        Margin="0,0,0,8"
-                                        SnapsToDevicePixels="True"/>
-                                    <TextBlock Text="{Binding FileName}"
-                                            Foreground="{StaticResource AppTextPrimaryBrush}"
-                                            FontSize="12"
-                                            FontFamily="{StaticResource AppFontFamily}"
-                                            TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding TagsText}"
-                                            Foreground="{StaticResource AppTextSecondaryBrush}"
-                                            FontSize="11"
-                                            Margin="0,2,0,0"
-                                            FontFamily="{StaticResource AppFontFamily}"
-                                            TextTrimming="CharacterEllipsis"/>
-                                </StackPanel>
-                            </Border>
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                                    Padding="0"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    FocusVisualStyle="{x:Null}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="CardBorder"
+                                                Background="Transparent"
+                                                CornerRadius="14">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="CardBorder"
+                                                        Property="Background"
+                                                        Value="#FFBEE6FD"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="CardBorder"
+                                                        Property="Background"
+                                                        Value="#FFD7EEFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Border Width="160"
+                                        Margin="4"
+                                        Padding="8"
+                                        CornerRadius="12"
+                                        Background="{StaticResource AppSurfaceAltBrush}">
+                                    <StackPanel>
+                                        <Image Source="{Binding Thumbnail}"
+                                               Width="144" Height="144"
+                                               Stretch="UniformToFill"
+                                               Margin="0,0,0,8"
+                                               SnapsToDevicePixels="True"/>
+                                        <TextBlock Text="{Binding FileName}"
+                                                   Foreground="{StaticResource AppTextPrimaryBrush}"
+                                                   FontSize="12"
+                                                   FontFamily="{StaticResource AppFontFamily}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <ItemsControl ItemsSource="{Binding Tags}"
+                                                      Margin="0,6,0,0">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#EDE9FE"
+                                                            CornerRadius="12"
+                                                            Margin="0,0,4,4"
+                                                            Padding="6,2">
+                                                        <TextBlock Text="{Binding}"
+                                                                   FontSize="11"
+                                                                   FontFamily="{StaticResource AppFontFamily}"
+                                                                   Foreground="{StaticResource AppTextPrimaryBrush}"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
 
+            <Border x:Name="ImageCustomScrollTrack"
+                    Grid.Column="1"
+                    Width="20"
+                    Margin="0"
+                    Background="{StaticResource TagScrollBarTrackBackgroundBrush}"
+                    CornerRadius="10"
+                    SnapsToDevicePixels="True"
+                    SizeChanged="ImageCustomScrollTrack_SizeChanged">
+                <Grid>
+                    <Border x:Name="ImageCustomScrollThumb"
+                            Background="{StaticResource TagScrollBarThumbBackgroundBrush}"
+                            CornerRadius="8"
+                            Margin="4"
+                            VerticalAlignment="Top"
+                            Height="40"
+                            Cursor="Hand"
+                            MouseLeftButtonDown="ImageCustomScrollThumb_MouseLeftButtonDown"
+                            MouseLeftButtonUp="ImageCustomScrollThumb_MouseLeftButtonUp"
+                            MouseMove="ImageCustomScrollThumb_MouseMove" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

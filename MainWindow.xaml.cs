@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using WF = System.Windows.Forms;
 using HyIO.Views;
 
@@ -26,8 +27,8 @@ namespace HyIO
 
         // 네비게이션 선택 상태
         private Button _currentNavButton;
-        private System.Windows.Media.Brush _navDefaultBackground;
-        private System.Windows.Media.Brush _navSelectedBrush;
+        private const int NavTransitionMilliseconds = 170;
+        private bool _navInitialized;
 
         // ====== 글로벌 핫키 관련 상수/WinAPI ======
         private const int HOTKEY_ID = 0x9876;
@@ -65,13 +66,9 @@ namespace HyIO
 
                 // 뷰 생성
                 _imageOverlayView = new ImageOverlayView(_config);
-                _folderManagerView = new FolderManagerView(_config);
-                _tagManagerView = new TagManagerView(_config);
+                _folderManagerView = new FolderManagerView(_config, OnFoldersChanged);
+                _tagManagerView = new TagManagerView(_config, OnTagsChanged);
                 _settingsView = new SettingsView(_config, OnSettingsChanged);
-
-                // 네비게이션 색상 초기값
-                _navDefaultBackground = NavImageOverlay.Background;
-                _navSelectedBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFB, 0x92, 0x3C));
 
                 // 처음 화면: Image Overlay 선택
                 SelectNavButton(NavImageOverlay, 130);
@@ -125,8 +122,7 @@ namespace HyIO
             _toggleAutoPasteMenuItem.Click += ToggleAutoPasteMenuItem_Click;
             UpdateAutoPasteMenuItemText();
 
-            menu.Items.Add("HyIO 대시보드 열기", null, (s, e) => ShowDashboard());
-            menu.Items.Add("이미지 오버레이 열기", null, (s, e) => ShowDashboardAndOverlayTab());
+            menu.Items.Add("HyIO 열기", null, (s, e) => ShowDashboardAndOverlayTab());
             menu.Items.Add(new WF.ToolStripSeparator());
             menu.Items.Add(_toggleAutoPasteMenuItem);
             menu.Items.Add("종료", null, (s, e) => ExitApp());
@@ -202,6 +198,20 @@ namespace HyIO
                 else
                 {
                     if (p == "space") key = 0x20;
+                    else if (p == "enter") key = (uint)KeyInterop.VirtualKeyFromKey(Key.Enter);
+                    else if (p == "pageup") key = (uint)KeyInterop.VirtualKeyFromKey(Key.PageUp);
+                    else if (p == "pagedown") key = (uint)KeyInterop.VirtualKeyFromKey(Key.PageDown);
+                    else if (p == "plus") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemPlus);
+                    else if (p == "minus") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemMinus);
+                    else if (p == "comma") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemComma);
+                    else if (p == "period") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemPeriod);
+                    else if (p == "slash") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemQuestion);
+                    else if (p == "semicolon") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemSemicolon);
+                    else if (p == "quote") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemQuotes);
+                    else if (p == "openbracket") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemOpenBrackets);
+                    else if (p == "closebracket") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemCloseBrackets);
+                    else if (p == "backslash") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemPipe);
+                    else if (p == "backtick") key = (uint)KeyInterop.VirtualKeyFromKey(Key.OemTilde);
                     else
                     {
                         var k = (System.Windows.Input.Key)Enum.Parse(typeof(System.Windows.Input.Key), part, true);
@@ -227,7 +237,7 @@ namespace HyIO
         {
             App.Config.AutoPasteEnabled = !App.Config.AutoPasteEnabled;
             ConfigManager.Save(App.Config);
-            UpdateAutoPasteMenuItemText();
+            ApplyAutoPasteStateChanged();
         }
 
         private void UpdateAutoPasteMenuItemText()
@@ -237,6 +247,12 @@ namespace HyIO
             _toggleAutoPasteMenuItem.Checked = App.Config.AutoPasteEnabled;
             _toggleAutoPasteMenuItem.Text =
                 App.Config.AutoPasteEnabled ? "자동 붙여넣기: ON" : "자동 붙여넣기: OFF";
+        }
+
+        private void ApplyAutoPasteStateChanged()
+        {
+            UpdateAutoPasteMenuItemText();
+            _settingsView?.SyncFromConfig();
         }
 
         // =================== 헤더 버튼 ===================
@@ -254,15 +270,49 @@ namespace HyIO
         // =================== 네비게이션 선택 처리 ===================
         private void SelectNavButton(Button btn, double topMaskHeight)
         {
-            if (_currentNavButton != null)
+            AnimateNavigationSelection(btn, topMaskHeight);
+            _currentNavButton = btn;
+        }
+
+        private void AnimateNavigationSelection(Button btn, double topMaskHeight)
+        {
+            if (btn == null)
+                return;
+
+            btn.UpdateLayout();
+            NavButtonHost.UpdateLayout();
+
+            var duration = TimeSpan.FromMilliseconds(NavTransitionMilliseconds);
+            var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+            double targetY = btn.TranslatePoint(new System.Windows.Point(0, 0), NavButtonHost).Y - 44;
+
+            if (!_navInitialized)
             {
-                _currentNavButton.Background = _navDefaultBackground;
+                NavSelectionTransform.Y = targetY;
+                RowUpper.Height = new GridLength(topMaskHeight);
+                _navInitialized = true;
+                return;
             }
 
-            btn.Background = _navSelectedBrush;
-            RowUpper.Height = new GridLength(topMaskHeight);
-            _currentNavButton = btn;
-            
+            var highlightAnimation = new DoubleAnimation
+            {
+                To = targetY,
+                Duration = duration,
+                EasingFunction = easing
+            };
+
+            NavSelectionTransform.BeginAnimation(TranslateTransform.YProperty, highlightAnimation);
+
+            var rowAnimation = new GridLengthAnimation
+            {
+                From = RowUpper.Height,
+                To = new GridLength(topMaskHeight),
+                Duration = duration,
+                EasingFunction = easing
+            };
+
+            RowUpper.BeginAnimation(RowDefinition.HeightProperty, rowAnimation);
         }
 
         private void NavImageOverlay_Click(object sender, RoutedEventArgs e)
@@ -272,7 +322,6 @@ namespace HyIO
             HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다.";
             MainContent.Content = _imageOverlayView;
             _imageOverlayView.LoadImages();
-            
         }
 
         private void NavFolderManager_Click(object sender, RoutedEventArgs e)
@@ -281,7 +330,6 @@ namespace HyIO
             Dashboard.Text = "폴더 매니저";
             HeaderSubtitle.Text = "이미지 탐색에 사용할 폴더를 관리합니다.";
             MainContent.Content = _folderManagerView;
-            
         }
 
 
@@ -302,7 +350,17 @@ namespace HyIO
             Dashboard.Text = "설정";
             HeaderSubtitle.Text = "기타 옵션을 설정합니다.";
             MainContent.Content = _settingsView;
-            
+        }
+
+        private void OnTagsChanged()
+        {
+            _imageOverlayView.RefreshTags();
+        }
+
+        private void OnFoldersChanged()
+        {
+            _imageOverlayView.LoadImages();
+            _tagManagerView.ReloadTags();
         }
 
         private void OnSettingsChanged()
@@ -311,6 +369,57 @@ namespace HyIO
             var helper = new WindowInteropHelper(this);
             UnregisterHotKey(helper.Handle, HOTKEY_ID);
             RegisterGlobalHotKey();
+            ApplyAutoPasteStateChanged();
+        }
+    }
+
+    public class GridLengthAnimation : AnimationTimeline
+    {
+        public override Type TargetPropertyType => typeof(GridLength);
+
+        public static readonly DependencyProperty FromProperty =
+            DependencyProperty.Register(nameof(From), typeof(GridLength), typeof(GridLengthAnimation));
+
+        public static readonly DependencyProperty ToProperty =
+            DependencyProperty.Register(nameof(To), typeof(GridLength), typeof(GridLengthAnimation));
+
+        public static readonly DependencyProperty EasingFunctionProperty =
+            DependencyProperty.Register(nameof(EasingFunction), typeof(IEasingFunction), typeof(GridLengthAnimation));
+
+        public GridLength From
+        {
+            get => (GridLength)GetValue(FromProperty);
+            set => SetValue(FromProperty, value);
+        }
+
+        public GridLength To
+        {
+            get => (GridLength)GetValue(ToProperty);
+            set => SetValue(ToProperty, value);
+        }
+
+        public IEasingFunction EasingFunction
+        {
+            get => (IEasingFunction)GetValue(EasingFunctionProperty);
+            set => SetValue(EasingFunctionProperty, value);
+        }
+
+        public override object GetCurrentValue(object defaultOriginValue, object defaultDestinationValue, AnimationClock animationClock)
+        {
+            double fromValue = From.Value;
+            double toValue = To.Value;
+            double progress = animationClock.CurrentProgress ?? 0d;
+
+            if (EasingFunction != null)
+                progress = EasingFunction.Ease(progress);
+
+            double current = fromValue + ((toValue - fromValue) * progress);
+            return new GridLength(current, GridUnitType.Pixel);
+        }
+
+        protected override Freezable CreateInstanceCore()
+        {
+            return new GridLengthAnimation();
         }
     }
 }
