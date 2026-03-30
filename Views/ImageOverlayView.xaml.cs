@@ -6,9 +6,12 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WF = System.Windows.Forms;
 
@@ -66,30 +69,107 @@ namespace HyIO.Views
             }
         }
 
+        private sealed class ImageLoadProgress
+        {
+            public string Message { get; init; } = string.Empty;
+            public double Value { get; init; }
+        }
+
+        private sealed class ImageLoadResult
+        {
+            public HashSet<string> SeenPaths { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+            public List<ImageItem> Items { get; init; } = new();
+        }
+
         private readonly AppConfig _config;
         private readonly ObservableCollection<ImageItem> _items = new();
         private bool _isThumbDragging;
         private Point _thumbDragStartPoint;
         private double _thumbDragStartOffset;
+        private CancellationTokenSource _loadImagesCts;
 
         public ImageOverlayView(AppConfig config)
         {
             InitializeComponent();
             _config = config;
             ImageItemsControl.ItemsSource = _items;
-
-            LoadImages();
         }
 
-        public void LoadImages()
+        public async Task LoadImagesAsync()
         {
-            var seenNow = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var rebuiltItems = new List<ImageItem>();
+            _loadImagesCts?.Cancel();
+            _loadImagesCts?.Dispose();
 
-            foreach (var folder in _config.Folders.Where(f => f.Enabled && Directory.Exists(f.Path)))
+            var cts = new CancellationTokenSource();
+            _loadImagesCts = cts;
+
+            SetLoadingState(true, "이미지 목록을 불러오는 중...", 0);
+
+            try
             {
+                var progress = new Progress<ImageLoadProgress>(p => SetLoadingState(true, p.Message, p.Value));
+                var result = await Task.Run(() => BuildImageLoadResult(progress, cts.Token), cts.Token);
+
+                if (cts.IsCancellationRequested)
+                    return;
+
+                ApplyLoadResult(result);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                SetLoadingState(false, string.Empty, 0);
+                MessageBox.Show($"이미지 목록을 불러오는 중 오류가 발생했습니다.\n\n{ex.Message}",
+                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (ReferenceEquals(_loadImagesCts, cts))
+                {
+                    SetLoadingState(false, string.Empty, 0);
+                    _loadImagesCts.Dispose();
+                    _loadImagesCts = null;
+                }
+            }
+        }
+
+        private ImageLoadResult BuildImageLoadResult(IProgress<ImageLoadProgress> progress, CancellationToken cancellationToken)
+        {
+            var enabledFolders = _config.Folders
+                .Where(f => f.Enabled && Directory.Exists(f.Path))
+                .ToList();
+
+            var candidateFiles = new List<string>();
+            int folderCount = enabledFolders.Count;
+
+            if (folderCount == 0)
+            {
+                progress.Report(new ImageLoadProgress
+                {
+                    Message = "등록된 폴더가 없습니다.",
+                    Value = 100
+                });
+
+                return new ImageLoadResult();
+            }
+
+            for (int folderIndex = 0; folderIndex < folderCount; folderIndex++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var folder = enabledFolders[folderIndex];
+                progress.Report(new ImageLoadProgress
+                {
+                    Message = $"{Path.GetFileName(folder.Path)} 폴더를 스캔하는 중...",
+                    Value = folderIndex * 40d / folderCount
+                });
+
                 foreach (var file in Directory.EnumerateFiles(folder.Path))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     var ext = Path.GetExtension(file);
                     if (string.IsNullOrEmpty(ext))
                         continue;
@@ -101,8 +181,41 @@ namespace HyIO.Views
                     if (!ImageExtensions.Contains(ext))
                         continue;
 
-                    seenNow.Add(file);
+                    candidateFiles.Add(file);
+                }
 
+                progress.Report(new ImageLoadProgress
+                {
+                    Message = $"{Path.GetFileName(folder.Path)} 폴더 스캔 완료",
+                    Value = (folderIndex + 1) * 40d / folderCount
+                });
+            }
+
+            var seenNow = new HashSet<string>(candidateFiles, StringComparer.OrdinalIgnoreCase);
+            var rebuiltItems = new List<ImageItem>(candidateFiles.Count);
+
+            if (candidateFiles.Count == 0)
+            {
+                progress.Report(new ImageLoadProgress
+                {
+                    Message = "표시할 이미지가 없습니다.",
+                    Value = 100
+                });
+
+                return new ImageLoadResult
+                {
+                    SeenPaths = seenNow,
+                    Items = rebuiltItems
+                };
+            }
+
+            for (int i = 0; i < candidateFiles.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var file = candidateFiles[i];
+                try
+                {
                     var bmp = new BitmapImage();
                     bmp.BeginInit();
                     bmp.CacheOption = BitmapCacheOption.OnLoad;
@@ -117,7 +230,29 @@ namespace HyIO.Views
                         Thumbnail = bmp
                     });
                 }
+                catch
+                {
+                    continue;
+                }
+
+                progress.Report(new ImageLoadProgress
+                {
+                    Message = $"이미지 미리보기를 만드는 중... ({i + 1}/{candidateFiles.Count})",
+                    Value = 40d + ((i + 1) * 60d / Math.Max(1, candidateFiles.Count))
+                });
             }
+
+            return new ImageLoadResult
+            {
+                SeenPaths = seenNow,
+                Items = rebuiltItems
+            };
+        }
+
+        private void ApplyLoadResult(ImageLoadResult result)
+        {
+            var seenNow = result.SeenPaths;
+            var rebuiltItems = result.Items;
 
             var activeImageKeys = new HashSet<string>(
                 seenNow.Select(TagKeyHelper.GetImageKey),
@@ -184,6 +319,13 @@ namespace HyIO.Views
 
             SortItemsByUsage();
             ApplyFilter();
+        }
+
+        private void SetLoadingState(bool isLoading, string message, double progressValue)
+        {
+            LoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+            LoadingProgressBar.Value = Math.Max(0, Math.Min(100, progressValue));
+            LoadingStatusText.Text = string.IsNullOrWhiteSpace(message) ? "이미지 목록을 불러오는 중..." : message;
         }
 
         private void CleanupUsageEntries(HashSet<string> activePaths)
@@ -413,10 +555,7 @@ namespace HyIO.Views
                 try
                 {
                     UpdateUsageCount(item);
-
-                    var fileDropList = new StringCollection();
-                    fileDropList.Add(item.FilePath);
-                    Clipboard.SetFileDropList(fileDropList);
+                    CopyImageToClipboard(item.FilePath);
                     var win = Window.GetWindow(this);
 
                     if (win != null)
@@ -436,6 +575,54 @@ namespace HyIO.Views
                         "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        private static void CopyImageToClipboard(string filePath)
+        {
+            var extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+
+            if (extension == ".gif")
+            {
+                var fileDropList = new StringCollection();
+                fileDropList.Add(filePath);
+                Clipboard.SetFileDropList(fileDropList);
+                return;
+            }
+
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.UriSource = new Uri(filePath);
+            image.EndInit();
+            image.Freeze();
+
+            BitmapSource clipboardImage = extension == ".png"
+                ? FlattenImageOnWhiteBackground(image)
+                : image;
+
+            var dataObject = new DataObject();
+            dataObject.SetImage(clipboardImage);
+            Clipboard.SetDataObject(dataObject, true);
+        }
+
+        private static BitmapSource FlattenImageOnWhiteBackground(BitmapSource source)
+        {
+            int pixelWidth = Math.Max(1, source.PixelWidth);
+            int pixelHeight = Math.Max(1, source.PixelHeight);
+            double dpiX = source.DpiX > 0 ? source.DpiX : 96;
+            double dpiY = source.DpiY > 0 ? source.DpiY : 96;
+
+            var visual = new DrawingVisual();
+            using (var context = visual.RenderOpen())
+            {
+                context.DrawRectangle(Brushes.White, null, new Rect(0, 0, pixelWidth, pixelHeight));
+                context.DrawImage(source, new Rect(0, 0, pixelWidth, pixelHeight));
+            }
+
+            var flattened = new RenderTargetBitmap(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
+            flattened.Render(visual);
+            flattened.Freeze();
+            return flattened;
         }
     }
 }

@@ -141,5 +141,49 @@
                 </Grid>
             </Border>
         </Grid>
+        <Border x:Name="LoadingOverlay"
+                Grid.RowSpan="2"
+                Background="#CCF5F6FA"
+                CornerRadius="18"
+                Visibility="Collapsed"
+                Panel.ZIndex="10">
+            <Border Width="360"
+                    Padding="28"
+                    CornerRadius="24"
+                    Background="White"
+                    BorderBrush="#18000000"
+                    BorderThickness="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <Image Source="Resources/hyio_image.png"
+                           Width="180"
+                           Height="180"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,20"/>
+                    <TextBlock Text="이미지 목록을 준비하고 있습니다"
+                               HorizontalAlignment="Center"
+                               Foreground="{StaticResource AppTextPrimaryBrush}"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               FontFamily="{StaticResource AppFontFamily}"/>
+                    <TextBlock x:Name="LoadingStatusText"
+                               Text="이미지 목록을 불러오는 중..."
+                               HorizontalAlignment="Center"
+                               Margin="0,12,0,16"
+                               Foreground="{StaticResource AppTextSecondaryBrush}"
+                               FontSize="13"
+                               FontFamily="{StaticResource AppFontFamily}"/>
+                    <ProgressBar x:Name="LoadingProgressBar"
+                                 Height="14"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="0"
+                                 Foreground="{StaticResource ButtonOrangeMiddleBrush}"
+                                 Background="#FFF1F3F7"/>
+                </StackPanel>
+            </Border>
+        </Border>
     </Grid>
 </UserControl>

@@ -1,5 +1,6 @@
 ﻿﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,6 +8,7 @@ using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Resources;
 using WF = System.Windows.Forms;
 using HyIO.Views;
 
@@ -50,7 +52,7 @@ namespace HyIO
             InitializeComponent();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -87,6 +89,8 @@ namespace HyIO
                 var helper = new WindowInteropHelper(this);
                 HwndSource source = HwndSource.FromHwnd(helper.Handle);
                 source.AddHook(HwndHook);
+
+                await _imageOverlayView.LoadImagesAsync();
             }
             catch (Exception ex)
             {
@@ -112,7 +116,7 @@ namespace HyIO
         private void CreateTrayIcon()
         {
             _notifyIcon = new WF.NotifyIcon();
-            _notifyIcon.Icon = new Icon("Resources/haru.ico");
+            _notifyIcon.Icon = LoadTrayIcon();
             _notifyIcon.Visible = true;
             _notifyIcon.Text = "HyIO - ImageOverlay";
 
@@ -129,6 +133,21 @@ namespace HyIO
 
             _notifyIcon.ContextMenuStrip = menu;
             _notifyIcon.DoubleClick += (s, e) => ShowDashboardAndOverlayTab();
+        }
+
+        private Icon LoadTrayIcon()
+        {
+            StreamResourceInfo resourceStream = Application.GetResourceStream(
+                new Uri("pack://application:,,,/Resources/haru.ico", UriKind.Absolute));
+
+            if (resourceStream?.Stream == null)
+                throw new FileNotFoundException("트레이 아이콘 리소스를 찾을 수 없습니다.", "Resources/haru.ico");
+
+            using (resourceStream.Stream)
+            using (var icon = new Icon(resourceStream.Stream))
+            {
+                return (Icon)icon.Clone();
+            }
         }
 
         private void ShowDashboard()
@@ -321,7 +340,7 @@ namespace HyIO
             Dashboard.Text = "이미지 선택";
             HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다.";
             MainContent.Content = _imageOverlayView;
-            _imageOverlayView.LoadImages();
+            _ = _imageOverlayView.LoadImagesAsync();
         }
 
         private void NavFolderManager_Click(object sender, RoutedEventArgs e)
@@ -357,9 +376,9 @@ namespace HyIO
             _imageOverlayView.RefreshTags();
         }
 
-        private void OnFoldersChanged()
+        private async void OnFoldersChanged()
         {
-            _imageOverlayView.LoadImages();
+            await _imageOverlayView.LoadImagesAsync();
             _tagManagerView.ReloadTags();
         }
 
