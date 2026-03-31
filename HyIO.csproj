@@ -6,6 +6,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Resources/haru.ico</ApplicationIcon>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <!-- 필요하면 여기 Name/RootNamespace 등을 HyIO로 명시해도 됨 -->
     <!-- <RootNamespace>HyIO</RootNamespace> -->
     <!-- <AssemblyName>HyIO</AssemblyName> -->

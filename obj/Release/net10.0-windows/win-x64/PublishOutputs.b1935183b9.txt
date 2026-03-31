@@ -1,0 +1,2 @@
+G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\publish\HyIO.pdb
+G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\publish\HyIO.exe
