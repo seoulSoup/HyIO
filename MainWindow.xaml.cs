@@ -164,7 +164,7 @@ namespace HyIO
         private void ShowDashboardAndOverlayTab()
         {
             ShowDashboard();
-            NavTagManager_Click(null, new RoutedEventArgs());
+            NavImageOverlay_Click(null, new RoutedEventArgs());
         }
 
         private void ExitApp()
@@ -389,6 +389,15 @@ namespace HyIO
             };
 
             RowUpper.BeginAnimation(RowDefinition.HeightProperty, rowAnimation);
+        }
+
+        private void NavImageOverlay_Click(object sender, RoutedEventArgs e)
+        {
+            SelectNavButton(NavImageOverlay, 130);
+            Dashboard.Text = "이미지 선택";
+            HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다.";
+            MainContent.Content = _imageOverlayView;
+            _ = _imageOverlayView.LoadImagesAsync();
         }
 
         private void NavFolderManager_Click(object sender, RoutedEventArgs e)
