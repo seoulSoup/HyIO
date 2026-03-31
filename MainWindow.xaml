@@ -235,22 +235,6 @@
                                            FontSize="12"
                                            FontFamily="{StaticResource AppFontFamily}"/>
 
-                                <Button x:Name="NavImageOverlay"
-                                        Style="{StaticResource NavButtonStyle}"
-                                        Click="NavImageOverlay_Click"
-                                        Margin="0,0,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Image Source="Resources/Image.png"
-                                               Width="30" Height="30"
-                                               Stretch="UniformToFill"
-                                               Margin="24,6,12,8"
-                                               SnapsToDevicePixels="True"/>
-                                        <TextBlock Text="이미지 목록"
-                                                   FontSize="16"
-                                                   VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
                                 <Button x:Name="NavFolderManager"
                                         Style="{StaticResource NavButtonStyle}"
                                         Click="NavFolderManager_Click"
@@ -325,7 +309,7 @@
                     <!-- 3개의 Row: 위 흰, 가운데 오렌지(높이 고정), 아래 흰(가변) -->
                     <Grid.RowDefinitions>
                         <!-- 위 마스크 영역 : 시작값 150, 코드에서 변경 가능 -->
-                        <RowDefinition x:Name="RowUpper" Height="130" />
+                        <RowDefinition x:Name="RowUpper" Height="180" />
                         <!-- 가운데 오렌지 직사각형 높이 (고정) -->
                         <RowDefinition Height="50" />
                         <!-- 아래 마스크 영역 : 남은 부분 전부 -->
@@ -370,14 +354,14 @@
                                 Orientation="Vertical"
                                 Margin="0,0,0,24">
                         <TextBlock x:Name="Dashboard"
-                                   Text="이미지 선택"
+                                   Text="태그 매니저"
                                    Foreground="{StaticResource AppTextPrimaryBrush}"
                                    FontSize="22"
                                    FontWeight="SemiBold"
                                    Margin="12,0,0,6"
                                    FontFamily="{StaticResource AppFontFamily}"/>
                         <TextBlock x:Name="HeaderSubtitle"
-                                   Text="즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다."
+                                   Text="이미지에 태그를 부여해서 명령어 검색에 활용할 수 있습니다."
                                    Foreground="{StaticResource AppTextSecondaryBrush}"
                                    FontSize="14"
                                    Margin="12,4,0,0"

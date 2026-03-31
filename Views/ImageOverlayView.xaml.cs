@@ -19,6 +19,15 @@ namespace HyIO.Views
 {
     public partial class ImageOverlayView : UserControl
     {
+        public sealed class PreviewImageMatch
+        {
+            public string CommandText { get; init; } = string.Empty;
+            public string FilePath { get; init; } = string.Empty;
+            public string FileName { get; init; } = string.Empty;
+            public BitmapImage Thumbnail { get; init; } = null!;
+            public string MatchSummary { get; init; } = string.Empty;
+        }
+
         private static readonly string[] ImageExtensions =
         {
             ".png", ".jpg", ".jpeg", ".bmp", ".gif"
@@ -133,6 +142,55 @@ namespace HyIO.Views
                     _loadImagesCts = null;
                 }
             }
+        }
+
+        public IReadOnlyList<PreviewImageMatch> FindPreviewMatches(string commandText, int maxResults = 6)
+        {
+            var normalizedCommand = NormalizeLookupToken(commandText);
+            if (string.IsNullOrWhiteSpace(normalizedCommand))
+                return Array.Empty<PreviewImageMatch>();
+
+            var candidates = _config.Folders
+                .Where(f => f.Enabled && Directory.Exists(f.Path))
+                .SelectMany(f =>
+                {
+                    try
+                    {
+                        return Directory.EnumerateFiles(f.Path);
+                    }
+                    catch
+                    {
+                        return Enumerable.Empty<string>();
+                    }
+                })
+                .Where(IsSupportedImagePath)
+                .Select(path => CreatePreviewCandidate(path, normalizedCommand))
+                .Where(candidate => candidate != null)
+                .OrderByDescending(candidate => candidate.IsTagMatch)
+                .ThenByDescending(candidate => candidate.IsExactMatch)
+                .ThenByDescending(candidate => candidate.UsageCount)
+                .ThenBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+                .Take(Math.Max(1, maxResults))
+                .ToList();
+
+            var matches = new List<PreviewImageMatch>(candidates.Count);
+            foreach (var candidate in candidates)
+            {
+                var thumbnail = LoadPreviewBitmap(candidate.FilePath);
+                if (thumbnail == null)
+                    continue;
+
+                matches.Add(new PreviewImageMatch
+                {
+                    CommandText = commandText.Trim(),
+                    FilePath = candidate.FilePath,
+                    FileName = candidate.FileName,
+                    Thumbnail = thumbnail,
+                    MatchSummary = candidate.MatchSummary
+                });
+            }
+
+            return matches;
         }
 
         private ImageLoadResult BuildImageLoadResult(IProgress<ImageLoadProgress> progress, CancellationToken cancellationToken)
@@ -425,6 +483,147 @@ namespace HyIO.Views
             item.TagsText = string.Join(" ", normalizedTags);
         }
 
+        public void CopyMatchToClipboard(PreviewImageMatch match, bool autoPaste)
+        {
+            if (match == null || string.IsNullOrWhiteSpace(match.FilePath))
+                return;
+
+            var imageItem = _items.FirstOrDefault(item =>
+                string.Equals(item.FilePath, match.FilePath, StringComparison.OrdinalIgnoreCase));
+
+            if (imageItem != null)
+            {
+                UpdateUsageCount(imageItem);
+            }
+
+            CopyImageToClipboard(match.FilePath);
+
+            if (autoPaste)
+            {
+                WF.SendKeys.SendWait("^v");
+            }
+        }
+
+        private PreviewCandidate CreatePreviewCandidate(string filePath, string normalizedCommand)
+        {
+            var fileName = Path.GetFileName(filePath);
+            if (string.IsNullOrWhiteSpace(fileName))
+                return null;
+
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath) ?? string.Empty;
+            var normalizedFileName = NormalizeLookupToken(fileNameWithoutExtension);
+            bool fileNameExactMatch = normalizedFileName == normalizedCommand;
+            bool fileNameContainsMatch = normalizedFileName.Contains(normalizedCommand, StringComparison.Ordinal);
+
+            var tagKey = TagKeyHelper.GetImageKey(filePath);
+            bool tagExactMatch = false;
+            bool tagContainsMatch = false;
+            string matchedTag = string.Empty;
+
+            if (_config.Tags.TryGetValue(tagKey, out var pathTags))
+            {
+                foreach (var tag in pathTags)
+                {
+                    var normalizedTag = NormalizeLookupToken(tag);
+                    if (normalizedTag == normalizedCommand)
+                    {
+                        tagExactMatch = true;
+                        matchedTag = tag;
+                        break;
+                    }
+
+                    if (!tagContainsMatch && normalizedTag.Contains(normalizedCommand, StringComparison.Ordinal))
+                    {
+                        tagContainsMatch = true;
+                        matchedTag = tag;
+                    }
+                }
+            }
+
+            if (!tagExactMatch && !tagContainsMatch && _config.Tags.TryGetValue(fileName, out var legacyTags))
+            {
+                foreach (var tag in legacyTags)
+                {
+                    var normalizedTag = NormalizeLookupToken(tag);
+                    if (normalizedTag == normalizedCommand)
+                    {
+                        tagExactMatch = true;
+                        matchedTag = tag;
+                        break;
+                    }
+
+                    if (!tagContainsMatch && normalizedTag.Contains(normalizedCommand, StringComparison.Ordinal))
+                    {
+                        tagContainsMatch = true;
+                        matchedTag = tag;
+                    }
+                }
+            }
+
+            bool isTagMatch = tagExactMatch || tagContainsMatch;
+            bool isFileNameMatch = fileNameExactMatch || fileNameContainsMatch;
+
+            if (!isFileNameMatch && !isTagMatch)
+                return null;
+
+            int usageCount = _config.ImageUsage.TryGetValue(tagKey, out var usage) ? usage.Count : 0;
+            bool isExactMatch = fileNameExactMatch || tagExactMatch;
+
+            string matchSummary = isTagMatch
+                ? $"태그 매치: {matchedTag}"
+                : $"파일명 매치: {fileNameWithoutExtension}";
+
+            return new PreviewCandidate
+            {
+                FilePath = filePath,
+                FileName = fileName,
+                UsageCount = usageCount,
+                IsTagMatch = isTagMatch,
+                IsExactMatch = isExactMatch,
+                MatchSummary = matchSummary
+            };
+        }
+
+        private static bool IsSupportedImagePath(string path)
+        {
+            var ext = Path.GetExtension(path);
+            if (string.IsNullOrWhiteSpace(ext))
+                return false;
+
+            ext = ext.ToLowerInvariant();
+            if (ext == ".svg" || ext == ".lnk")
+                return false;
+
+            return ImageExtensions.Contains(ext);
+        }
+
+        private static string NormalizeLookupToken(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            return text.Trim().TrimStart('#', '/').ToLowerInvariant();
+        }
+
+        private static BitmapImage LoadPreviewBitmap(string filePath)
+        {
+            try
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.UriSource = new Uri(filePath);
+                bmp.DecodePixelWidth = 256;
+                bmp.EndInit();
+                bmp.Freeze();
+                return bmp;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private void ApplyFilter()
         {
             string keyword = SearchBox.Text?.Trim() ?? string.Empty;
@@ -623,6 +822,16 @@ namespace HyIO.Views
             flattened.Render(visual);
             flattened.Freeze();
             return flattened;
+        }
+
+        private sealed class PreviewCandidate
+        {
+            public string FilePath { get; init; } = string.Empty;
+            public string FileName { get; init; } = string.Empty;
+            public int UsageCount { get; init; }
+            public bool IsTagMatch { get; init; }
+            public bool IsExactMatch { get; init; }
+            public string MatchSummary { get; init; } = string.Empty;
         }
     }
 }

@@ -26,6 +26,8 @@ namespace HyIO
         private FolderManagerView _folderManagerView;
         private TagManagerView _tagManagerView;
         private SettingsView _settingsView;
+        private CommandPreviewWindow _commandPreviewWindow;
+        private IntPtr _lastCommandTargetWindow;
 
         // 네비게이션 선택 상태
         private Button _currentNavButton;
@@ -72,13 +74,10 @@ namespace HyIO
                 _tagManagerView = new TagManagerView(_config, OnTagsChanged);
                 _settingsView = new SettingsView(_config, OnSettingsChanged);
 
-                // 처음 화면: Image Overlay 선택
-                SelectNavButton(NavImageOverlay, 130);
-                MainContent.Content = _imageOverlayView;
-
-                // 메인 창은 대시보드로 사용 → 보여주기
+                // 메인 창은 기존 매니저 화면으로 사용
                 this.ShowInTaskbar = true;
                 this.Show();
+                NavTagManager_Click(null, new RoutedEventArgs());
 
                 // 트레이 아이콘 생성
                 CreateTrayIcon();
@@ -165,7 +164,7 @@ namespace HyIO
         private void ShowDashboardAndOverlayTab()
         {
             ShowDashboard();
-            NavImageOverlay_Click(null, new RoutedEventArgs());
+            NavTagManager_Click(null, new RoutedEventArgs());
         }
 
         private void ExitApp()
@@ -244,12 +243,70 @@ namespace HyIO
         {
             if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
             {
-                // 핫키 → 대시보드 + ImageOverlay 탭
-                ShowDashboardAndOverlayTab();
+                if (!TryShowSlashCommandPreview())
+                {
+                    ShowDashboardAndOverlayTab();
+                }
+
                 handled = true;
             }
             return IntPtr.Zero;
         }
+
+        private bool TryShowSlashCommandPreview()
+        {
+            if (_imageOverlayView == null)
+                return false;
+
+            if (!FocusedTextContextReader.TryReadSlashCommand(out var context))
+            {
+                _commandPreviewWindow?.HidePreview();
+                return false;
+            }
+
+            var matches = _imageOverlayView.FindPreviewMatches(context.CommandText);
+
+            EnsureCommandPreviewWindow();
+            _lastCommandTargetWindow = context.TargetWindowHandle;
+            _commandPreviewWindow.ShowPreview(
+                context.CommandText,
+                matches,
+                context.AnchorScreenPoint);
+
+            return true;
+        }
+
+        private void EnsureCommandPreviewWindow()
+        {
+            if (_commandPreviewWindow != null)
+                return;
+
+            _commandPreviewWindow = new CommandPreviewWindow();
+            _commandPreviewWindow.CandidateChosen += CommandPreviewWindow_CandidateChosen;
+        }
+
+        private void CommandPreviewWindow_CandidateChosen(ImageOverlayView.PreviewImageMatch match)
+        {
+            try
+            {
+                _imageOverlayView.CopyMatchToClipboard(match, false);
+
+                if (App.Config.AutoPasteEnabled && _lastCommandTargetWindow != IntPtr.Zero)
+                {
+                    SetForegroundWindow(_lastCommandTargetWindow);
+                    WF.SendKeys.SendWait("^v");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"이미지를 선택하는 중 오류가 발생했습니다.\n\n{ex.Message}",
+                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         // =================== 자동 붙여넣기 토글 ===================
         private void ToggleAutoPasteMenuItem_Click(object sender, EventArgs e)
@@ -332,15 +389,6 @@ namespace HyIO
             };
 
             RowUpper.BeginAnimation(RowDefinition.HeightProperty, rowAnimation);
-        }
-
-        private void NavImageOverlay_Click(object sender, RoutedEventArgs e)
-        {
-            SelectNavButton(NavImageOverlay, 130);
-            Dashboard.Text = "이미지 선택";
-            HeaderSubtitle.Text = "즐겨 쓰는 이미지를 선택해서 복사/붙여넣기 할 수 있습니다.";
-            MainContent.Content = _imageOverlayView;
-            _ = _imageOverlayView.LoadImagesAsync();
         }
 
         private void NavFolderManager_Click(object sender, RoutedEventArgs e)
