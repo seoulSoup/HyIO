@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
 
 namespace HyIO.Views
 {
@@ -29,11 +31,10 @@ namespace HyIO.Views
             }
 
             UpdateLayout();
-
-            Left = Math.Max(8, anchorScreenPoint.X - (ActualWidth / 2));
-            Top = Math.Max(8, anchorScreenPoint.Y - ActualHeight - 18);
+            PositionNearAnchor(anchorScreenPoint);
             Activate();
             Focus();
+            CandidatesList.Focus();
         }
 
         public void HidePreview()
@@ -123,6 +124,49 @@ namespace HyIO.Views
             }
 
             return null;
+        }
+
+        private void PositionNearAnchor(Point anchorScreenPoint)
+        {
+            var targetScreen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point(
+                (int)Math.Round(anchorScreenPoint.X),
+                (int)Math.Round(anchorScreenPoint.Y)));
+
+            var workingAreaTopLeft = DevicePixelsToDip(new Point(
+                targetScreen.WorkingArea.Left,
+                targetScreen.WorkingArea.Top));
+            var workingAreaBottomRight = DevicePixelsToDip(new Point(
+                targetScreen.WorkingArea.Right,
+                targetScreen.WorkingArea.Bottom));
+            var anchorDip = DevicePixelsToDip(anchorScreenPoint);
+
+            const double margin = 8;
+            const double anchorGap = 18;
+
+            double preferredLeft = anchorDip.X - (ActualWidth / 2);
+            double minLeft = workingAreaTopLeft.X + margin;
+            double maxLeft = Math.Max(minLeft, workingAreaBottomRight.X - ActualWidth - margin);
+            Left = Math.Min(Math.Max(preferredLeft, minLeft), maxLeft);
+
+            double preferredTop = anchorDip.Y - ActualHeight - anchorGap;
+            double minTop = workingAreaTopLeft.Y + margin;
+            double maxTop = Math.Max(minTop, workingAreaBottomRight.Y - ActualHeight - margin);
+
+            if (preferredTop < minTop)
+            {
+                preferredTop = anchorDip.Y + anchorGap;
+            }
+
+            Top = Math.Min(Math.Max(preferredTop, minTop), maxTop);
+        }
+
+        private Point DevicePixelsToDip(Point point)
+        {
+            var source = PresentationSource.FromVisual(this);
+            if (source?.CompositionTarget == null)
+                return point;
+
+            return source.CompositionTarget.TransformFromDevice.Transform(point);
         }
     }
 }

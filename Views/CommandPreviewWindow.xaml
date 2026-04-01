@@ -9,6 +9,7 @@
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         Topmost="True"
+        WindowStartupLocation="Manual"
         SizeToContent="WidthAndHeight"
         KeyDown="Window_KeyDown"
         Deactivated="Window_Deactivated">
@@ -45,8 +46,10 @@
 
             <ListBox x:Name="CandidatesList"
                      Grid.Row="2"
+                     MaxHeight="520"
                      BorderThickness="0"
                      Background="Transparent"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      MouseDoubleClick="CandidatesList_MouseDoubleClick"
                      MouseLeftButtonUp="CandidatesList_MouseLeftButtonUp">

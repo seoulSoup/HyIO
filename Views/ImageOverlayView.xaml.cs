@@ -144,7 +144,7 @@ namespace HyIO.Views
             }
         }
 
-        public IReadOnlyList<PreviewImageMatch> FindPreviewMatches(string commandText, int maxResults = 6)
+        public IReadOnlyList<PreviewImageMatch> FindPreviewMatches(string commandText, int maxResults = 50)
         {
             var normalizedCommand = NormalizeLookupToken(commandText);
             if (string.IsNullOrWhiteSpace(normalizedCommand))
