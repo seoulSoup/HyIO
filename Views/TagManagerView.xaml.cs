@@ -67,6 +67,7 @@ namespace HyIO.Views
             // 이미지에 붙은 태그들
             public ObservableCollection<string> Tags { get; } = new();
             public bool CanRemoveLegacyFileNameKey { get; set; }
+            public string TagsText => string.Join(" ", Tags);
 
             public event PropertyChangedEventHandler PropertyChanged;
 
@@ -91,6 +92,23 @@ namespace HyIO.Views
         public void ReloadTags()
         {
             LoadTags();
+        }
+
+        private void ApplyFilter()
+        {
+            string keyword = SearchBox?.Text?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(keyword))
+            {
+                TagGrid.ItemsSource = _rows;
+                return;
+            }
+
+            keyword = keyword.ToLowerInvariant();
+            var filtered = _rows.Where(row =>
+                (row.FileName ?? string.Empty).ToLowerInvariant().Contains(keyword) ||
+                (row.TagsText ?? string.Empty).ToLowerInvariant().Contains(keyword)).ToList();
+
+            TagGrid.ItemsSource = filtered;
         }
 
         private int GetUsageCount(string filePath)
@@ -229,6 +247,8 @@ namespace HyIO.Views
             {
                 ConfigManager.Save(_config);
             }
+
+            ApplyFilter();
         }
 
         private ImageSource LoadThumbnailSafe(string path)
@@ -357,6 +377,7 @@ namespace HyIO.Views
 
             ConfigManager.Save(_config);
             _onTagsChanged?.Invoke();
+            ApplyFilter();
         }
 
         // ==================== placeholder 처리 ====================
@@ -522,6 +543,11 @@ namespace HyIO.Views
             if (newOffset > scrollable) newOffset = scrollable;
 
             TagScrollViewer.ScrollToVerticalOffset(newOffset);
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyFilter();
         }
 
     }

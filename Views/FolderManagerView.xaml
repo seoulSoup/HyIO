@@ -43,7 +43,7 @@
                     <Setter Property="Background" Value="Transparent"/>
                 </Style>
                 <Style TargetType="Button">
-                    <Setter Property="Background" Value="{StaticResource ButtonVioletHighBrush}"/>
+                    <Setter Property="Background" Value="{StaticResource ButtonVioletMiddleBrush}"/>
                 </Style>
             </StackPanel.Resources>
 
@@ -65,13 +65,13 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Root"
                                         Property="Background"
-                                        Value="{StaticResource ButtonVioletMiddleBrush}"/> <!-- 살짝 더 진한 보라빛 -->
+                                        Value="{StaticResource ButtonVioletHighBrush}"/> <!-- 살짝 더 진한 보라빛 -->
                             </Trigger>
                             <!-- 눌렀을 때 -->
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Root"
                                         Property="Background"
-                                        Value="{StaticResource ButtonVioletBrush}"/>
+                                        Value="{StaticResource ButtonVioletMiddleBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -100,13 +100,13 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Root"
                                         Property="Background"
-                                        Value="#FFC9D0FF"/> <!-- 살짝 더 진한 보라빛 -->
+                                        Value="{StaticResource ButtonVioletHighBrush}"/> <!-- 살짝 더 진한 보라빛 -->
                             </Trigger>
                             <!-- 눌렀을 때 -->
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Root"
                                         Property="Background"
-                                        Value="#E0E5E7FF"/>
+                                        Value="{StaticResource ButtonVioletMiddleBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

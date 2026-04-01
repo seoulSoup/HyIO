@@ -19,9 +19,9 @@
             <Color x:Key="AppBorderColor">#1F000000</Color>          <!-- 옅은 테두리 -->
             <Color x:Key="AppTextPrimaryColor">#FF111827</Color>     <!-- 본문 텍스트 -->
             <Color x:Key="AppTextSecondaryColor">#FF90939C</Color>   <!-- 서브 텍스트 -->
-            <Color x:Key="ButtonBgViolet">#E0E5E7FF</Color>   <!-- 서브 텍스트 -->
-            <Color x:Key="ButtonBgVioletMiddle">#FFC9D0FF</Color>   <!-- 서브 텍스트 -->
-            <Color x:Key="ButtonBgVioletHigh">#FFAEA4FC</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgViolet">#FFFDC3A1</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgVioletMiddle">#FFFB9B8F</Color>   <!-- 서브 텍스트 -->
+            <Color x:Key="ButtonBgVioletHigh">#FFF57799</Color>   <!-- 서브 텍스트 -->
             <Color x:Key="ButtonBgOrange">#CFFB923C</Color>   <!-- 서브 텍스트 -->
             <Color x:Key="ButtonBgOrangeMiddle">#FFFB923C</Color>   <!-- 서브 텍스트 -->
             <Color x:Key="ButtonBgOrangeHigh">#FFFC770A</Color>   <!-- 서브 텍스트 -->
@@ -42,8 +42,8 @@
             <SolidColorBrush x:Key="ButtonOrangeHighBrush" Color="{StaticResource ButtonBgOrangeHigh}"/>
             <!-- Tag Manager 전용 ScrollBar 브러시 -->
             <SolidColorBrush x:Key="TagScrollBarTrackBackgroundBrush" Color="{StaticResource ButtonBgViolet}"/>
-            <SolidColorBrush x:Key="TagScrollBarThumbBackgroundBrush" Color="#FFAEB9FF"/>
-            <SolidColorBrush x:Key="TagScrollBarThumbHoverBackgroundBrush" Color="#FF8F86F0"/>
+            <SolidColorBrush x:Key="TagScrollBarThumbBackgroundBrush" Color="#FFFB9B8F"/>
+            <SolidColorBrush x:Key="TagScrollBarThumbHoverBackgroundBrush" Color="#FFF57799"/>
 
             <!-- Tag 칩 X 버튼용 브러시 -->
             <SolidColorBrush x:Key="TagChipCloseButtonBackgroundBrush"

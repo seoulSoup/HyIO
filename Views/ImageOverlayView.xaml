@@ -156,12 +156,6 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
                 <StackPanel>
-                    <Image Source="Resources/hyio_image.png"
-                           Width="180"
-                           Height="180"
-                           Stretch="Uniform"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,20"/>
                     <TextBlock Text="이미지 목록을 준비하고 있습니다"
                                HorizontalAlignment="Center"
                                Foreground="{StaticResource AppTextPrimaryBrush}"

@@ -10,15 +10,18 @@
         "projectUniqueName": "G:\\Projects\\Project19_HYIO\\HyIO\\HyIO\\HyIO.csproj",
         "projectName": "HyIO",
         "projectPath": "G:\\Projects\\Project19_HYIO\\HyIO\\HyIO\\HyIO.csproj",
-        "packagesPath": "g:\\Projects\\Project19_HYIO\\buildtmp\\packages",
+        "packagesPath": "C:\\Users\\ragna\\.nuget\\packages\\",
         "outputPath": "G:\\Projects\\Project19_HYIO\\HyIO\\HyIO\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "G:\\Projects\\Project19_HYIO\\buildtmp\\NuGet.Config"
+          "C:\\Users\\ragna\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0-windows"
         ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
         "frameworks": {
           "net10.0-windows7.0": {
             "targetAlias": "net10.0-windows",

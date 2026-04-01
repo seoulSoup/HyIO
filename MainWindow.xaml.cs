@@ -473,18 +473,25 @@ namespace HyIO
             _tagManagerView.ReloadTags();
         }
 
-        private void OnSettingsChanged()
+        private void OnSettingsChanged(bool hotkeyChanged)
         {
-            // 핫키가 변경되면 재등록
-            var helper = new WindowInteropHelper(this);
-            UnregisterHotKey(helper.Handle, HOTKEY_ID);
-            RegisterGlobalHotKey();
+            if (hotkeyChanged)
+            {
+                var helper = new WindowInteropHelper(this);
+                UnregisterHotKey(helper.Handle, HOTKEY_ID);
+                RegisterGlobalHotKey();
+            }
+
             ApplyAutoPasteStateChanged();
         }
 
         private bool IsGeneralOverlayVisible()
         {
-            return IsVisible && ReferenceEquals(MainContent.Content, _imageOverlayView);
+            return IsVisible &&
+                   ShowInTaskbar &&
+                   IsActive &&
+                   WindowState != WindowState.Minimized &&
+                   ReferenceEquals(MainContent.Content, _imageOverlayView);
         }
 
         private void HideGeneralOverlay()

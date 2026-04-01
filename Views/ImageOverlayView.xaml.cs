@@ -6,6 +6,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -90,12 +93,22 @@ namespace HyIO.Views
             public List<ImageItem> Items { get; init; } = new();
         }
 
+        private sealed class ThumbnailCacheEntry
+        {
+            public string FilePath { get; set; } = string.Empty;
+            public long LastWriteTicksUtc { get; set; }
+            public long FileLength { get; set; }
+            public string ThumbnailPath { get; set; } = string.Empty;
+        }
+
         private readonly AppConfig _config;
         private readonly ObservableCollection<ImageItem> _items = new();
         private bool _isThumbDragging;
         private Point _thumbDragStartPoint;
         private double _thumbDragStartOffset;
         private CancellationTokenSource _loadImagesCts;
+        private readonly string _thumbnailCacheRoot = Path.Combine(ConfigManager.ConfigFolder, "thumbnail-cache");
+        private readonly string _thumbnailCacheIndexPath = Path.Combine(ConfigManager.ConfigFolder, "thumbnail-cache-index.json");
 
         public ImageOverlayView(AppConfig config)
         {
@@ -195,6 +208,7 @@ namespace HyIO.Views
 
         private ImageLoadResult BuildImageLoadResult(IProgress<ImageLoadProgress> progress, CancellationToken cancellationToken)
         {
+            var thumbnailCache = LoadThumbnailCacheIndex();
             var enabledFolders = _config.Folders
                 .Where(f => f.Enabled && Directory.Exists(f.Path))
                 .ToList();
@@ -274,13 +288,9 @@ namespace HyIO.Views
                 var file = candidateFiles[i];
                 try
                 {
-                    var bmp = new BitmapImage();
-                    bmp.BeginInit();
-                    bmp.CacheOption = BitmapCacheOption.OnLoad;
-                    bmp.UriSource = new Uri(file);
-                    bmp.DecodePixelWidth = 128;
-                    bmp.EndInit();
-                    bmp.Freeze();
+                    var bmp = LoadOrCreateThumbnail(file, thumbnailCache);
+                    if (bmp == null)
+                        continue;
 
                     rebuiltItems.Add(new ImageItem
                     {
@@ -299,6 +309,9 @@ namespace HyIO.Views
                     Value = 40d + ((i + 1) * 60d / Math.Max(1, candidateFiles.Count))
                 });
             }
+
+            RemoveStaleThumbnailCacheEntries(thumbnailCache, seenNow);
+            SaveThumbnailCacheIndex(thumbnailCache);
 
             return new ImageLoadResult
             {
@@ -621,6 +634,152 @@ namespace HyIO.Views
             catch
             {
                 return null;
+            }
+        }
+
+        private Dictionary<string, ThumbnailCacheEntry> LoadThumbnailCacheIndex()
+        {
+            try
+            {
+                Directory.CreateDirectory(_thumbnailCacheRoot);
+
+                if (!File.Exists(_thumbnailCacheIndexPath))
+                    return new Dictionary<string, ThumbnailCacheEntry>(StringComparer.OrdinalIgnoreCase);
+
+                var json = File.ReadAllText(_thumbnailCacheIndexPath);
+                var cache = JsonSerializer.Deserialize<Dictionary<string, ThumbnailCacheEntry>>(json);
+                return cache ?? new Dictionary<string, ThumbnailCacheEntry>(StringComparer.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return new Dictionary<string, ThumbnailCacheEntry>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private void SaveThumbnailCacheIndex(Dictionary<string, ThumbnailCacheEntry> thumbnailCache)
+        {
+            try
+            {
+                Directory.CreateDirectory(_thumbnailCacheRoot);
+                var validPaths = new HashSet<string>(
+                    thumbnailCache.Values
+                        .Select(entry => entry.ThumbnailPath)
+                        .Where(path => !string.IsNullOrWhiteSpace(path)),
+                    StringComparer.OrdinalIgnoreCase);
+
+                if (Directory.Exists(_thumbnailCacheRoot))
+                {
+                    foreach (var cacheFile in Directory.EnumerateFiles(_thumbnailCacheRoot, "*.png"))
+                    {
+                        if (!validPaths.Contains(cacheFile))
+                        {
+                            File.Delete(cacheFile);
+                        }
+                    }
+                }
+
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                var json = JsonSerializer.Serialize(thumbnailCache, options);
+                File.WriteAllText(_thumbnailCacheIndexPath, json);
+            }
+            catch
+            {
+            }
+        }
+
+        private BitmapImage LoadOrCreateThumbnail(string filePath, Dictionary<string, ThumbnailCacheEntry> thumbnailCache)
+        {
+            try
+            {
+                var fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists)
+                    return null;
+
+                var fileKey = TagKeyHelper.GetImageKey(filePath);
+                if (thumbnailCache.TryGetValue(fileKey, out var cacheEntry) &&
+                    cacheEntry.LastWriteTicksUtc == fileInfo.LastWriteTimeUtc.Ticks &&
+                    cacheEntry.FileLength == fileInfo.Length &&
+                    File.Exists(cacheEntry.ThumbnailPath))
+                {
+                    var cachedBitmap = LoadBitmapFromPath(cacheEntry.ThumbnailPath, 128);
+                    if (cachedBitmap != null)
+                        return cachedBitmap;
+                }
+
+                var sourceBitmap = LoadBitmapFromPath(filePath, 128);
+                if (sourceBitmap == null)
+                    return null;
+
+                Directory.CreateDirectory(_thumbnailCacheRoot);
+                var thumbnailPath = Path.Combine(_thumbnailCacheRoot, BuildCacheFileName(filePath) + ".png");
+                WriteBitmapToPng(sourceBitmap, thumbnailPath);
+
+                thumbnailCache[fileKey] = new ThumbnailCacheEntry
+                {
+                    FilePath = filePath,
+                    LastWriteTicksUtc = fileInfo.LastWriteTimeUtc.Ticks,
+                    FileLength = fileInfo.Length,
+                    ThumbnailPath = thumbnailPath
+                };
+
+                return LoadBitmapFromPath(thumbnailPath, 128) ?? sourceBitmap;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static BitmapImage LoadBitmapFromPath(string path, int decodePixelWidth)
+        {
+            try
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.UriSource = new Uri(path);
+                bmp.DecodePixelWidth = decodePixelWidth;
+                bmp.EndInit();
+                bmp.Freeze();
+                return bmp;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static void WriteBitmapToPng(BitmapSource source, string outputPath)
+        {
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(source));
+
+            using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            encoder.Save(stream);
+        }
+
+        private static string BuildCacheFileName(string filePath)
+        {
+            var normalizedPath = Path.GetFullPath(filePath).ToLowerInvariant();
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalizedPath));
+            return Convert.ToHexString(bytes);
+        }
+
+        private static void RemoveStaleThumbnailCacheEntries(
+            Dictionary<string, ThumbnailCacheEntry> thumbnailCache,
+            HashSet<string> activePaths)
+        {
+            var activeKeys = new HashSet<string>(
+                activePaths.Select(TagKeyHelper.GetImageKey),
+                StringComparer.OrdinalIgnoreCase);
+
+            var keysToRemove = thumbnailCache.Keys
+                .Where(key => !activeKeys.Contains(key))
+                .ToList();
+
+            foreach (var key in keysToRemove)
+            {
+                thumbnailCache.Remove(key);
             }
         }
 

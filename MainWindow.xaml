@@ -56,7 +56,7 @@
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="Root"
-                                        Background="{TemplateBinding Background}"
+                                        Background="{StaticResource ButtonVioletMiddleBrush}"
                                         CornerRadius="6"
                                         BorderBrush="Transparent">
                                     <ContentPresenter HorizontalAlignment="Center"
@@ -67,20 +67,21 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="Root"
                                                 Property="Background"
-                                                Value="{StaticResource ButtonVioletMiddleBrush}"/> <!-- 살짝 더 진한 보라빛 -->
+                                                Value="{StaticResource ButtonVioletHighBrush}"/> <!-- 살짝 더 진한 보라빛 -->
                                     </Trigger>
                                     <!-- 눌렀을 때 -->
                                     <Trigger Property="IsPressed" Value="True">
                                         <Setter TargetName="Root"
                                                 Property="Background"
-                                                Value="{StaticResource ButtonVioletHighBrush}"/>
+                                                Value="{StaticResource ButtonVioletMiddleBrush}"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                         <TextBlock Text="━"
                                 FontSize="10"
-                                Foreground="{StaticResource AppTextSecondaryBrush}"
+                                FontWeight="Bold"
+                                Foreground="White"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
                     </Button>
@@ -117,6 +118,7 @@
                         </Button.Template>
                         <TextBlock Text="✕"
                                 FontSize="11"
+                                FontWeight="Bold"
                                 Foreground="White"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
@@ -166,12 +168,12 @@
                             <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="HyIO"
                                            Foreground="White"
-                                           FontSize="18"
+                                           FontSize="20"
                                            FontWeight="SemiBold"
                                            FontFamily="{StaticResource AppFontFamily}"/>
                                 <TextBlock Text="Hynix Image Overlay"
                                            Foreground="#B0FFFFFF"
-                                           FontSize="12"
+                                           FontSize="13"
                                            FontFamily="{StaticResource AppFontFamily}"/>
                             </StackPanel>
                         </StackPanel>
@@ -233,7 +235,7 @@
                                 <TextBlock Text="Navigation"
                                            Margin="24,12,0,12"
                                            Foreground="#90FFFFFF"
-                                           FontSize="12"
+                                           FontSize="14"
                                            FontFamily="{StaticResource AppFontFamily}"/>
 
                                 <Button x:Name="NavImageOverlay"
@@ -307,11 +309,11 @@
                                     Margin="24,32,24,20">
                             <TextBlock Text="HyIO · Hynix Image Overlay"
                                        Foreground="#80FFFFFF"
-                                       FontSize="11"
+                                       FontSize="12"
                                        FontFamily="{StaticResource AppFontFamily}"/>
                             <TextBlock Text="Tray helper for quick paste"
                                        Foreground="#60FFFFFF"
-                                       FontSize="10"
+                                       FontSize="11"
                                        Margin="0,2,0,0"
                                        FontFamily="{StaticResource AppFontFamily}"/>
                         </StackPanel>

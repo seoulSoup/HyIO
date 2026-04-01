@@ -10,9 +10,9 @@ namespace HyIO.Views
     public partial class SettingsView : UserControl
     {
         private readonly AppConfig _config;
-        private readonly Action _onSettingsChanged;
+        private readonly Action<bool> _onSettingsChanged;
 
-        public SettingsView(AppConfig config, Action onSettingsChanged)
+        public SettingsView(AppConfig config, Action<bool> onSettingsChanged)
         {
             InitializeComponent();
             _config = config;
@@ -34,7 +34,7 @@ namespace HyIO.Views
             _config.AutoPasteEnabled = AutoPasteToggle.IsChecked == true;
             UpdateAutoPasteDescription();
             ConfigManager.Save(_config);
-            _onSettingsChanged?.Invoke();
+            _onSettingsChanged?.Invoke(false);
         }
 
         private void AutoPasteToggle_Loaded(object sender, RoutedEventArgs e)
@@ -118,7 +118,7 @@ namespace HyIO.Views
                 HotkeyBox.Text = string.Empty;
                 _config.Hotkey = string.Empty;
                 ConfigManager.Save(_config);
-                _onSettingsChanged?.Invoke();
+                _onSettingsChanged?.Invoke(true);
                 return;
             }
 
@@ -132,7 +132,7 @@ namespace HyIO.Views
                 HotkeyBox.CaretIndex = HotkeyBox.Text.Length;
                 _config.Hotkey = hotkeyText;
                 ConfigManager.Save(_config);
-                _onSettingsChanged?.Invoke();
+                _onSettingsChanged?.Invoke(true);
             }
         }
 
