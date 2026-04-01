@@ -1,7 +1,9 @@
 ﻿﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -28,6 +30,7 @@ namespace HyIO
         private SettingsView _settingsView;
         private CommandPreviewWindow _commandPreviewWindow;
         private IntPtr _lastCommandTargetWindow;
+        private SlashCommandContext _lastSlashCommandContext;
 
         // 네비게이션 선택 상태
         private Button _currentNavButton;
@@ -243,7 +246,7 @@ namespace HyIO
         {
             if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
             {
-                if (!TryShowSlashCommandPreview())
+                if (!HandleOverlayHotkey())
                 {
                     ShowDashboardAndOverlayTab();
                 }
@@ -253,6 +256,23 @@ namespace HyIO
             return IntPtr.Zero;
         }
 
+        private bool HandleOverlayHotkey()
+        {
+            if (_commandPreviewWindow?.IsVisible == true)
+            {
+                HideCommandPreview();
+                return true;
+            }
+
+            if (IsGeneralOverlayVisible())
+            {
+                HideGeneralOverlay();
+                return true;
+            }
+
+            return TryShowSlashCommandPreview();
+        }
+
         private bool TryShowSlashCommandPreview()
         {
             if (_imageOverlayView == null)
@@ -260,13 +280,14 @@ namespace HyIO
 
             if (!FocusedTextContextReader.TryReadSlashCommand(out var context))
             {
-                _commandPreviewWindow?.HidePreview();
+                HideCommandPreview();
                 return false;
             }
 
             var matches = _imageOverlayView.FindPreviewMatches(context.CommandText);
 
             EnsureCommandPreviewWindow();
+            _lastSlashCommandContext = context;
             _lastCommandTargetWindow = context.TargetWindowHandle;
             _commandPreviewWindow.ShowPreview(
                 context.CommandText,
@@ -294,6 +315,8 @@ namespace HyIO
                 if (App.Config.AutoPasteEnabled && _lastCommandTargetWindow != IntPtr.Zero)
                 {
                     SetForegroundWindow(_lastCommandTargetWindow);
+                    Thread.Sleep(60);
+                    RemoveSlashCommandText();
                     WF.SendKeys.SendWait("^v");
                 }
             }
@@ -307,6 +330,18 @@ namespace HyIO
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Escape)
+                return;
+
+            if (IsGeneralOverlayVisible())
+            {
+                HideGeneralOverlay();
+                e.Handled = true;
+            }
+        }
 
         // =================== 자동 붙여넣기 토글 ===================
         private void ToggleAutoPasteMenuItem_Click(object sender, EventArgs e)
@@ -339,8 +374,7 @@ namespace HyIO
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Hide();
-            this.ShowInTaskbar = false;
+            HideGeneralOverlay();
         }
 
         // =================== 네비게이션 선택 처리 ===================
@@ -446,6 +480,35 @@ namespace HyIO
             UnregisterHotKey(helper.Handle, HOTKEY_ID);
             RegisterGlobalHotKey();
             ApplyAutoPasteStateChanged();
+        }
+
+        private bool IsGeneralOverlayVisible()
+        {
+            return IsVisible && ReferenceEquals(MainContent.Content, _imageOverlayView);
+        }
+
+        private void HideGeneralOverlay()
+        {
+            HideCommandPreview();
+            Hide();
+            ShowInTaskbar = false;
+        }
+
+        private void HideCommandPreview()
+        {
+            _commandPreviewWindow?.HidePreview();
+            _lastSlashCommandContext = null;
+            _lastCommandTargetWindow = IntPtr.Zero;
+        }
+
+        private void RemoveSlashCommandText()
+        {
+            var slashText = _lastSlashCommandContext?.SlashText;
+            if (string.IsNullOrEmpty(slashText))
+                return;
+
+            var backspaces = string.Concat(Enumerable.Repeat("{BACKSPACE}", slashText.Length));
+            WF.SendKeys.SendWait(backspaces);
         }
     }
 

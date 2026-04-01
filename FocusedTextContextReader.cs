@@ -10,6 +10,7 @@ namespace HyIO
     internal sealed class SlashCommandContext
     {
         public string RawText { get; init; } = string.Empty;
+        public string SlashText { get; init; } = string.Empty;
         public string CommandText { get; init; } = string.Empty;
         public Point AnchorScreenPoint { get; init; }
         public IntPtr TargetWindowHandle { get; init; }
@@ -108,6 +109,7 @@ namespace HyIO
                 context = new SlashCommandContext
                 {
                     RawText = match.Value,
+                    SlashText = "/" + match.Groups["command"].Value,
                     CommandText = commandText,
                     AnchorScreenPoint = anchorPoint,
                     TargetWindowHandle = targetWindowHandle
