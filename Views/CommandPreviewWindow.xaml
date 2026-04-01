@@ -25,6 +25,68 @@
         </Border.Effect>
 
         <Grid Width="312">
+            <Grid.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Width" Value="20"/>
+                    <Setter Property="Background" Value="{StaticResource TagScrollBarTrackBackgroundBrush}"/>
+                    <Setter Property="Foreground" Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="10"
+                                        SnapsToDevicePixels="True">
+                                    <Track x:Name="PART_Track"
+                                           IsDirectionReversed="False">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.LineUpCommand"
+                                                          Opacity="0"
+                                                          Focusable="False"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb FocusVisualStyle="{x:Null}">
+                                                <Thumb.Style>
+                                                    <Style TargetType="Thumb">
+                                                        <Setter Property="Background" Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Thumb">
+                                                                    <Border Background="{TemplateBinding Background}"
+                                                                            CornerRadius="8"
+                                                                            Margin="4"/>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsDragging" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Thumb.Style>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.LineDownCommand"
+                                                          Opacity="0"
+                                                          Focusable="False"/>
+                                        </Track.IncreaseRepeatButton>
+                                    </Track>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="Orientation" Value="Horizontal">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Grid.Resources>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -49,6 +111,7 @@
                      MaxHeight="520"
                      BorderThickness="0"
                      Background="Transparent"
+                     FocusVisualStyle="{x:Null}"
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      MouseDoubleClick="CandidatesList_MouseDoubleClick"
@@ -58,6 +121,7 @@
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0,0,0,8"/>
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">

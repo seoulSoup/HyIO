@@ -80,7 +80,7 @@ namespace HyIO
                 // 메인 창은 기존 매니저 화면으로 사용
                 this.ShowInTaskbar = true;
                 this.Show();
-                NavTagManager_Click(null, new RoutedEventArgs());
+                NavImageOverlay_Click(null, new RoutedEventArgs());
 
                 // 트레이 아이콘 생성
                 CreateTrayIcon();
