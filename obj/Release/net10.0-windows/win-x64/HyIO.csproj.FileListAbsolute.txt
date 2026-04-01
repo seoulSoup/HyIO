@@ -2,7 +2,6 @@ G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\HyIO.ex
 G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\HyIO.deps.json
 G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\HyIO.runtimeconfig.json
 G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\HyIO.dll
-G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\HyIO.pdb
 G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\Microsoft.CSharp.dll
 G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\Microsoft.VisualBasic.Core.dll
 G:\Projects\Project19_HYIO\HyIO\HyIO\bin\Release\net10.0-windows\win-x64\Microsoft.Win32.Primitives.dll
@@ -489,10 +488,10 @@ G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.Ge
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.AssemblyInfoInputs.cache
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.AssemblyInfo.cs
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.csproj.CoreCompileInputs.cache
-G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.sourcelink.json
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.csproj.Up2Date
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.dll
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\refint\HyIO.dll
-G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.pdb
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\HyIO.genruntimeconfig.cache
 G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\ref\HyIO.dll
+G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\Views\CommandPreviewWindow.baml
+G:\Projects\Project19_HYIO\HyIO\HyIO\obj\Release\net10.0-windows\win-x64\Views\CommandPreviewWindow.g.cs
