@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "A+r8WoNXcmo=",
+  "success": true,
+  "projectFilePath": "g:\\Projects\\Project19_HYIO\\HyIO\\HyIO\\HyIO.csproj",
+  "expectedPackageFiles": [
+    "g:\\Projects\\Project19_HYIO\\buildtmp\\packages\\microsoft.net.illink.tasks\\10.0.5\\microsoft.net.illink.tasks.10.0.5.nupkg.sha512",
+    "g:\\Projects\\Project19_HYIO\\buildtmp\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.5\\microsoft.netcore.app.runtime.win-x64.10.0.5.nupkg.sha512",
+    "g:\\Projects\\Project19_HYIO\\buildtmp\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.5\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.5.nupkg.sha512",
+    "g:\\Projects\\Project19_HYIO\\buildtmp\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.5\\microsoft.aspnetcore.app.runtime.win-x64.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
