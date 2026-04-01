@@ -24,82 +24,26 @@
                               Opacity="0.28"/>
         </Border.Effect>
 
-        <Grid Width="312">
-            <Grid.Resources>
-                <Style TargetType="ScrollBar">
-                    <Setter Property="Width" Value="20"/>
-                    <Setter Property="Background" Value="{StaticResource TagScrollBarTrackBackgroundBrush}"/>
-                    <Setter Property="Foreground" Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
-                    <Setter Property="BorderThickness" Value="0"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ScrollBar">
-                                <Border Background="{TemplateBinding Background}"
-                                        CornerRadius="10"
-                                        SnapsToDevicePixels="True">
-                                    <Track x:Name="PART_Track"
-                                           IsDirectionReversed="False">
-                                        <Track.DecreaseRepeatButton>
-                                            <RepeatButton Command="ScrollBar.LineUpCommand"
-                                                          Opacity="0"
-                                                          Focusable="False"/>
-                                        </Track.DecreaseRepeatButton>
-                                        <Track.Thumb>
-                                            <Thumb FocusVisualStyle="{x:Null}">
-                                                <Thumb.Style>
-                                                    <Style TargetType="Thumb">
-                                                        <Setter Property="Background" Value="{StaticResource TagScrollBarThumbBackgroundBrush}"/>
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Thumb">
-                                                                    <Border Background="{TemplateBinding Background}"
-                                                                            CornerRadius="8"
-                                                                            Margin="4"/>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsDragging" Value="True">
-                                                                <Setter Property="Background" Value="{StaticResource TagScrollBarThumbHoverBackgroundBrush}"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Thumb.Style>
-                                            </Thumb>
-                                        </Track.Thumb>
-                                        <Track.IncreaseRepeatButton>
-                                            <RepeatButton Command="ScrollBar.LineDownCommand"
-                                                          Opacity="0"
-                                                          Focusable="False"/>
-                                        </Track.IncreaseRepeatButton>
-                                    </Track>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="Orientation" Value="Horizontal">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </Grid.Resources>
+        <Grid Width="332">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="20"/>
+            </Grid.ColumnDefinitions>
 
             <TextBlock x:Name="CommandTextBlock"
+                       Grid.ColumnSpan="2"
                        FontSize="13"
                        FontWeight="SemiBold"
                        Foreground="{StaticResource AppTextPrimaryBrush}"
                        FontFamily="{StaticResource AppFontFamily}"/>
 
             <TextBlock Grid.Row="1"
+                       Grid.ColumnSpan="2"
                        Margin="0,6,0,10"
                        Text="마우스로 클릭하거나 ↑/↓ 후 Enter로 선택"
                        Foreground="{StaticResource AppTextSecondaryBrush}"
@@ -108,11 +52,12 @@
 
             <ListBox x:Name="CandidatesList"
                      Grid.Row="2"
+                     Grid.Column="0"
                      MaxHeight="520"
                      BorderThickness="0"
                      Background="Transparent"
                      FocusVisualStyle="{x:Null}"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      MouseDoubleClick="CandidatesList_MouseDoubleClick"
                      MouseLeftButtonUp="CandidatesList_MouseLeftButtonUp">
@@ -187,8 +132,32 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
+            <Border x:Name="CustomScrollTrack"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Width="20"
+                    Margin="0"
+                    Background="{StaticResource TagScrollBarTrackBackgroundBrush}"
+                    CornerRadius="10"
+                    SnapsToDevicePixels="True"
+                    SizeChanged="CustomScrollTrack_SizeChanged">
+                <Grid>
+                    <Border x:Name="CustomScrollThumb"
+                            Background="{StaticResource TagScrollBarThumbBackgroundBrush}"
+                            CornerRadius="8"
+                            Margin="4"
+                            VerticalAlignment="Top"
+                            Height="40"
+                            Cursor="Hand"
+                            MouseLeftButtonDown="CustomScrollThumb_MouseLeftButtonDown"
+                            MouseLeftButtonUp="CustomScrollThumb_MouseLeftButtonUp"
+                            MouseMove="CustomScrollThumb_MouseMove" />
+                </Grid>
+            </Border>
+
             <Border x:Name="EmptyStatePanel"
                     Grid.Row="2"
+                    Grid.ColumnSpan="2"
                     CornerRadius="16"
                     Background="#FFF8FAFD"
                     Padding="16"
