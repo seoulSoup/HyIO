@@ -60,7 +60,7 @@ namespace HyIO.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/HyIO;component/views/foldermanagerview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/HyIO;V1.0.0.0;component/views/foldermanagerview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\FolderManagerView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

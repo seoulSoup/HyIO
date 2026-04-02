@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -40,16 +41,19 @@ namespace HyIO
         // ====== 글로벌 핫키 관련 상수/WinAPI ======
         private const int HOTKEY_ID = 0x9876;
         private const int WM_HOTKEY = 0x0312;
+        private const int ERROR_HOTKEY_ALREADY_REGISTERED = 1409;
 
         private const uint MOD_ALT = 0x0001;
         private const uint MOD_CTRL = 0x0002;
         private const uint MOD_SHIFT = 0x0004;
         private const uint MOD_WIN = 0x0008;
 
-        [DllImport("user32.dll")]
+        private bool _isHotkeyRegistered;
+
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
         public MainWindow()
@@ -85,12 +89,13 @@ namespace HyIO
                 // 트레이 아이콘 생성
                 CreateTrayIcon();
 
-                // 글로벌 핫키 등록
-                RegisterGlobalHotKey();
-
                 var helper = new WindowInteropHelper(this);
                 HwndSource source = HwndSource.FromHwnd(helper.Handle);
                 source.AddHook(HwndHook);
+                Closed += MainWindow_Closed;
+
+                // 글로벌 핫키 등록
+                await RegisterGlobalHotKeyAsync();
 
                 await _imageOverlayView.LoadImagesAsync();
             }
@@ -164,6 +169,11 @@ namespace HyIO
             this.Activate();
         }
 
+        public void ActivateFromExternalLaunch()
+        {
+            ShowDashboard();
+        }
+
         private void ShowDashboardAndOverlayTab()
         {
             ShowDashboard();
@@ -172,22 +182,59 @@ namespace HyIO
 
         private void ExitApp()
         {
-            _notifyIcon.Visible = false;
-            _notifyIcon.Dispose();
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Visible = false;
+                _notifyIcon.Dispose();
+                _notifyIcon = null;
+            }
+
             Application.Current.Shutdown();
         }
 
         // =================== 글로벌 핫키 처리 ===================
-        private void RegisterGlobalHotKey()
+        private async Task RegisterGlobalHotKeyAsync(bool showError = true)
         {
             var helper = new WindowInteropHelper(this);
             IntPtr hwnd = helper.Handle;
 
+            if (hwnd == IntPtr.Zero)
+                return;
+
+            if (_isHotkeyRegistered)
+            {
+                UnregisterHotKey(hwnd, HOTKEY_ID);
+                _isHotkeyRegistered = false;
+            }
+
             ParseHotkey(_config.Hotkey, out var mods, out var key);
 
-            if (!RegisterHotKey(hwnd, HOTKEY_ID, mods, key))
+            int[] retryDelays = { 0, 120, 250 };
+            int lastError = 0;
+
+            foreach (int delay in retryDelays)
             {
-                MessageBox.Show("글로벌 핫키 등록에 실패했습니다.", "오류",
+                if (delay > 0)
+                    await Task.Delay(delay);
+
+                if (RegisterHotKey(hwnd, HOTKEY_ID, mods, key))
+                {
+                    _isHotkeyRegistered = true;
+                    return;
+                }
+
+                lastError = Marshal.GetLastWin32Error();
+                if (lastError != ERROR_HOTKEY_ALREADY_REGISTERED)
+                    break;
+            }
+
+            if (showError)
+            {
+                var message = lastError == ERROR_HOTKEY_ALREADY_REGISTERED
+                    ? "글로벌 핫키 등록에 실패했습니다.\n이미 다른 프로그램 또는 다른 HyIO 인스턴스가 같은 핫키를 사용 중일 수 있습니다."
+                    : $"글로벌 핫키 등록에 실패했습니다.\n오류 코드: {lastError}";
+
+                MessageBox.Show(message, "오류",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -246,6 +293,13 @@ namespace HyIO
         {
             if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
             {
+                if (IsDashboardVisible())
+                {
+                    HideDashboard();
+                    handled = true;
+                    return IntPtr.Zero;
+                }
+
                 if (!HandleOverlayHotkey())
                 {
                     ShowDashboardAndOverlayTab();
@@ -477,28 +531,36 @@ namespace HyIO
         {
             if (hotkeyChanged)
             {
-                var helper = new WindowInteropHelper(this);
-                UnregisterHotKey(helper.Handle, HOTKEY_ID);
-                RegisterGlobalHotKey();
+                _ = RegisterGlobalHotKeyAsync();
             }
 
             ApplyAutoPasteStateChanged();
         }
 
-        private bool IsGeneralOverlayVisible()
+        private bool IsDashboardVisible()
         {
             return IsVisible &&
                    ShowInTaskbar &&
-                   IsActive &&
                    WindowState != WindowState.Minimized &&
+                   IsActive;
+        }
+
+        private bool IsGeneralOverlayVisible()
+        {
+            return IsDashboardVisible() &&
                    ReferenceEquals(MainContent.Content, _imageOverlayView);
         }
 
-        private void HideGeneralOverlay()
+        private void HideDashboard()
         {
             HideCommandPreview();
             Hide();
             ShowInTaskbar = false;
+        }
+
+        private void HideGeneralOverlay()
+        {
+            HideDashboard();
         }
 
         private void HideCommandPreview()
@@ -516,6 +578,31 @@ namespace HyIO
 
             var backspaces = string.Concat(Enumerable.Repeat("{BACKSPACE}", slashText.Length));
             WF.SendKeys.SendWait(backspaces);
+        }
+
+        private void MainWindow_Closed(object sender, EventArgs e)
+        {
+            try
+            {
+                HideCommandPreview();
+
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.Visible = false;
+                    _notifyIcon.Dispose();
+                    _notifyIcon = null;
+                }
+
+                var helper = new WindowInteropHelper(this);
+                if (_isHotkeyRegistered && helper.Handle != IntPtr.Zero)
+                {
+                    UnregisterHotKey(helper.Handle, HOTKEY_ID);
+                    _isHotkeyRegistered = false;
+                }
+            }
+            catch
+            {
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -7,7 +8,14 @@ namespace HyIO
 {
     public partial class App : Application
     {
-        // public static AppConfig Config { get; private set; } = null!;
+        private const string SingleInstanceMutexName = @"Local\HyIO.SingleInstance";
+        private const string ActivateExistingEventName = @"Local\HyIO.ActivateExisting";
+
+        private Mutex _singleInstanceMutex;
+        private EventWaitHandle _activateExistingEvent;
+        private Thread _activateListenerThread;
+        private volatile bool _isShuttingDown;
+
         public static AppConfig Config { get; set; } = null!;
 
 
@@ -22,17 +30,116 @@ namespace HyIO
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            _singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out bool isFirstInstance);
+
+            if (!isFirstInstance)
+            {
+                TrySignalExistingInstance();
+                Shutdown();
+                return;
+            }
+
+            Config = ConfigManager.Load();
+
+            _activateExistingEvent = new EventWaitHandle(
+                initialState: false,
+                EventResetMode.AutoReset,
+                ActivateExistingEventName);
+
+            StartActivateListener();
+
             base.OnStartup(e);
 
-            // 기존처럼 설정 로드
-            Config = ConfigManager.Load();
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+            mainWindow.Show();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
-            // 앱 종료 시 마지막 설정 저장
-            ConfigManager.Save(Config);
+            _isShuttingDown = true;
+
+            try
+            {
+                _activateExistingEvent?.Set();
+            }
+            catch
+            {
+            }
+
+            _activateListenerThread?.Join(300);
+            _activateExistingEvent?.Dispose();
+
+            if (Config != null)
+            {
+                ConfigManager.Save(Config);
+            }
+
+            try
+            {
+                _singleInstanceMutex?.ReleaseMutex();
+            }
+            catch
+            {
+            }
+
+            _singleInstanceMutex?.Dispose();
             base.OnExit(e);
+        }
+
+        private void TrySignalExistingInstance()
+        {
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    using var activateEvent = EventWaitHandle.OpenExisting(ActivateExistingEventName);
+                    activateEvent.Set();
+                    return;
+                }
+                catch
+                {
+                    Thread.Sleep(120);
+                }
+            }
+        }
+
+        private void StartActivateListener()
+        {
+            _activateListenerThread = new Thread(() =>
+            {
+                while (!_isShuttingDown)
+                {
+                    bool signaled;
+
+                    try
+                    {
+                        signaled = _activateExistingEvent.WaitOne();
+                    }
+                    catch
+                    {
+                        break;
+                    }
+
+                    if (!signaled || _isShuttingDown)
+                        continue;
+
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (Current?.MainWindow is MainWindow mainWindow)
+                        {
+                            mainWindow.ActivateFromExternalLaunch();
+                        }
+                    }));
+                }
+            })
+            {
+                IsBackground = true,
+                Name = "HyIO Activate Listener"
+            };
+
+            _activateListenerThread.SetApartmentState(ApartmentState.MTA);
+            _activateListenerThread.Start();
         }
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
