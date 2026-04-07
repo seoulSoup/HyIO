@@ -173,7 +173,7 @@
                                            FontFamily="{StaticResource AppFontFamily}"/>
                                 <TextBlock Text="Hynix Image Overlay"
                                            Foreground="#B0FFFFFF"
-                                           FontSize="13"
+                                           FontSize="12"
                                            FontFamily="{StaticResource AppFontFamily}"/>
                             </StackPanel>
                         </StackPanel>
@@ -309,11 +309,11 @@
                                     Margin="24,32,24,20">
                             <TextBlock Text="HyIO · Hynix Image Overlay"
                                        Foreground="#80FFFFFF"
-                                       FontSize="12"
+                                       FontSize="13"
                                        FontFamily="{StaticResource AppFontFamily}"/>
                             <TextBlock Text="Tray helper for quick paste"
                                        Foreground="#60FFFFFF"
-                                       FontSize="11"
+                                       FontSize="12"
                                        Margin="0,2,0,0"
                                        FontFamily="{StaticResource AppFontFamily}"/>
                         </StackPanel>

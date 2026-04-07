@@ -963,21 +963,39 @@ namespace HyIO.Views
             Clipboard.SetDataObject(dataObject, true);
         }
 
+        private const int MinimumClipboardImageDimension = 64;
+
         private static BitmapSource FlattenImageOnWhiteBackground(BitmapSource source)
         {
             int pixelWidth = Math.Max(1, source.PixelWidth);
             int pixelHeight = Math.Max(1, source.PixelHeight);
             double dpiX = source.DpiX > 0 ? source.DpiX : 96;
             double dpiY = source.DpiY > 0 ? source.DpiY : 96;
+            double scale = Math.Max(
+                1d,
+                Math.Max(
+                    (double)MinimumClipboardImageDimension / pixelWidth,
+                    (double)MinimumClipboardImageDimension / pixelHeight));
+
+            int outputWidth = Math.Max(1, (int)Math.Ceiling(pixelWidth * scale));
+            int outputHeight = Math.Max(1, (int)Math.Ceiling(pixelHeight * scale));
+
+            BitmapSource renderSource = source;
+            if (scale > 1d)
+            {
+                renderSource = new TransformedBitmap(source, new ScaleTransform(scale, scale));
+                renderSource.Freeze();
+            }
 
             var visual = new DrawingVisual();
             using (var context = visual.RenderOpen())
             {
-                context.DrawRectangle(Brushes.White, null, new Rect(0, 0, pixelWidth, pixelHeight));
-                context.DrawImage(source, new Rect(0, 0, pixelWidth, pixelHeight));
+                RenderOptions.SetBitmapScalingMode(visual, BitmapScalingMode.NearestNeighbor);
+                context.DrawRectangle(Brushes.White, null, new Rect(0, 0, outputWidth, outputHeight));
+                context.DrawImage(renderSource, new Rect(0, 0, outputWidth, outputHeight));
             }
 
-            var flattened = new RenderTargetBitmap(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
+            var flattened = new RenderTargetBitmap(outputWidth, outputHeight, dpiX, dpiY, PixelFormats.Pbgra32);
             flattened.Render(visual);
             flattened.Freeze();
             return flattened;
