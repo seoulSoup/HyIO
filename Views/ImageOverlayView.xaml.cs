@@ -958,9 +958,7 @@ namespace HyIO.Views
             image.EndInit();
             image.Freeze();
 
-            BitmapSource clipboardImage = extension == ".png"
-                ? FlattenImageOnWhiteBackground(image)
-                : image;
+            BitmapSource clipboardImage = PrepareClipboardImage(image, flattenAlpha: extension == ".png");
 
             using var clipboardBitmap = ConvertToClipboardBitmap(clipboardImage);
             using var pngStream = EncodeBitmapSourceToPngStream(clipboardImage);
@@ -973,40 +971,77 @@ namespace HyIO.Views
 
         private const int MinimumClipboardImageDimension = 64;
 
-        private static BitmapSource FlattenImageOnWhiteBackground(BitmapSource source)
+        private static BitmapSource PrepareClipboardImage(BitmapSource source, bool flattenAlpha)
         {
             int pixelWidth = Math.Max(1, source.PixelWidth);
             int pixelHeight = Math.Max(1, source.PixelHeight);
-            double dpiX = source.DpiX > 0 ? source.DpiX : 96;
-            double dpiY = source.DpiY > 0 ? source.DpiY : 96;
-            double scale = Math.Max(
-                1d,
-                Math.Max(
+            int scale = Math.Max(
+                1,
+                (int)Math.Ceiling(Math.Max(
                     (double)MinimumClipboardImageDimension / pixelWidth,
-                    (double)MinimumClipboardImageDimension / pixelHeight));
+                    (double)MinimumClipboardImageDimension / pixelHeight)));
 
-            int outputWidth = Math.Max(1, (int)Math.Ceiling(pixelWidth * scale));
-            int outputHeight = Math.Max(1, (int)Math.Ceiling(pixelHeight * scale));
+            BitmapSource normalizedSource = source.Format == PixelFormats.Bgra32
+                ? source
+                : new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
 
-            BitmapSource renderSource = source;
-            if (scale > 1d)
+            int sourceStride = pixelWidth * 4;
+            byte[] sourcePixels = new byte[sourceStride * pixelHeight];
+            normalizedSource.CopyPixels(sourcePixels, sourceStride, 0);
+
+            int outputWidth = pixelWidth * scale;
+            int outputHeight = pixelHeight * scale;
+            int outputStride = outputWidth * 4;
+            byte[] outputPixels = new byte[outputStride * outputHeight];
+
+            for (int y = 0; y < outputHeight; y++)
             {
-                renderSource = new TransformedBitmap(source, new ScaleTransform(scale, scale));
-                renderSource.Freeze();
+                int sourceY = y / scale;
+                for (int x = 0; x < outputWidth; x++)
+                {
+                    int sourceX = x / scale;
+                    int sourceIndex = (sourceY * sourceStride) + (sourceX * 4);
+                    int outputIndex = (y * outputStride) + (x * 4);
+
+                    byte blue = sourcePixels[sourceIndex];
+                    byte green = sourcePixels[sourceIndex + 1];
+                    byte red = sourcePixels[sourceIndex + 2];
+                    byte alpha = sourcePixels[sourceIndex + 3];
+
+                    if (flattenAlpha)
+                    {
+                        outputPixels[outputIndex] = BlendOnWhite(blue, alpha);
+                        outputPixels[outputIndex + 1] = BlendOnWhite(green, alpha);
+                        outputPixels[outputIndex + 2] = BlendOnWhite(red, alpha);
+                        outputPixels[outputIndex + 3] = 255;
+                    }
+                    else
+                    {
+                        outputPixels[outputIndex] = blue;
+                        outputPixels[outputIndex + 1] = green;
+                        outputPixels[outputIndex + 2] = red;
+                        outputPixels[outputIndex + 3] = alpha;
+                    }
+                }
             }
 
-            var visual = new DrawingVisual();
-            using (var context = visual.RenderOpen())
-            {
-                RenderOptions.SetBitmapScalingMode(visual, BitmapScalingMode.NearestNeighbor);
-                context.DrawRectangle(Brushes.White, null, new Rect(0, 0, outputWidth, outputHeight));
-                context.DrawImage(renderSource, new Rect(0, 0, outputWidth, outputHeight));
-            }
+            var clipboardImage = BitmapSource.Create(
+                outputWidth,
+                outputHeight,
+                96,
+                96,
+                PixelFormats.Bgra32,
+                null,
+                outputPixels,
+                outputStride);
 
-            var flattened = new RenderTargetBitmap(outputWidth, outputHeight, dpiX, dpiY, PixelFormats.Pbgra32);
-            flattened.Render(visual);
-            flattened.Freeze();
-            return flattened;
+            clipboardImage.Freeze();
+            return clipboardImage;
+        }
+
+        private static byte BlendOnWhite(byte color, byte alpha)
+        {
+            return (byte)((color * alpha + 255 * (255 - alpha) + 127) / 255);
         }
 
         private static DrawingBitmap ConvertToClipboardBitmap(BitmapSource source)

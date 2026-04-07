@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HyIO")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eeb91ab694c172754acb219033e493b9e0038c78")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c2d1d3e2383731e2606fa9d6e4062454c0d4bac")]
 [assembly: System.Reflection.AssemblyProductAttribute("HyIO")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HyIO")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
