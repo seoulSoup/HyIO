@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WF = System.Windows.Forms;
+using DrawingBitmap = System.Drawing.Bitmap;
+using DrawingRectangle = System.Drawing.Rectangle;
+using DrawingImagingPixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace HyIO.Views
 {
@@ -958,9 +962,13 @@ namespace HyIO.Views
                 ? FlattenImageOnWhiteBackground(image)
                 : image;
 
-            var dataObject = new DataObject();
-            dataObject.SetImage(clipboardImage);
-            Clipboard.SetDataObject(dataObject, true);
+            using var clipboardBitmap = ConvertToClipboardBitmap(clipboardImage);
+            using var pngStream = EncodeBitmapSourceToPngStream(clipboardImage);
+
+            var dataObject = new WF.DataObject();
+            dataObject.SetData(WF.DataFormats.Bitmap, true, clipboardBitmap);
+            dataObject.SetData("PNG", false, pngStream);
+            WF.Clipboard.SetDataObject(dataObject, true);
         }
 
         private const int MinimumClipboardImageDimension = 64;
@@ -999,6 +1007,46 @@ namespace HyIO.Views
             flattened.Render(visual);
             flattened.Freeze();
             return flattened;
+        }
+
+        private static DrawingBitmap ConvertToClipboardBitmap(BitmapSource source)
+        {
+            BitmapSource normalizedSource = source.Format == PixelFormats.Bgra32
+                ? source
+                : new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+
+            int stride = normalizedSource.PixelWidth * 4;
+            byte[] pixels = new byte[stride * normalizedSource.PixelHeight];
+            normalizedSource.CopyPixels(pixels, stride, 0);
+
+            var bitmap = new DrawingBitmap(
+                normalizedSource.PixelWidth,
+                normalizedSource.PixelHeight,
+                DrawingImagingPixelFormat.Format32bppPArgb);
+
+            var rect = new DrawingRectangle(0, 0, bitmap.Width, bitmap.Height);
+            var bitmapData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
+            try
+            {
+                System.Runtime.InteropServices.Marshal.Copy(pixels, 0, bitmapData.Scan0, pixels.Length);
+            }
+            finally
+            {
+                bitmap.UnlockBits(bitmapData);
+            }
+
+            bitmap.SetResolution(96, 96);
+            return bitmap;
+        }
+
+        private static MemoryStream EncodeBitmapSourceToPngStream(BitmapSource source)
+        {
+            var stream = new MemoryStream();
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(source));
+            encoder.Save(stream);
+            stream.Position = 0;
+            return stream;
         }
 
         private sealed class PreviewCandidate

@@ -1,5 +1,5 @@
 ﻿HyIO
-1.0.0.0
+
 
 winexe
 C#
@@ -12,7 +12,7 @@ TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_O
 G:\Projects\Project19_HYIO\HyIO\HyIO\App.xaml
 6-1502386289
 
-141359876121
+121856512815
 214-929205795
 MainWindow.xaml;Views\CommandPreviewWindow.xaml;Views\FolderManagerView.xaml;Views\ImageOverlayView.xaml;Views\SettingsView.xaml;Views\TagManagerView.xaml;
 
